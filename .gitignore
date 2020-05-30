@@ -1,5 +1,4 @@
 .idea
-*.iml
 out
 outfds
 **/.bundle/
@@ -9,7 +8,6 @@ outfds
 
 # C extensions
 *.so
-*.iml
 
 # Packages
 *.egg
