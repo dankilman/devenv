@@ -1,0 +1,14 @@
+<jdk version="2">
+  <name value="Python {{version}} ({{name}})" />
+  <type value="Python SDK" />
+  <version value="Python {{version}}" />
+  <homePath value="{{prefix}}/bin/python" />
+  <roots>
+    <classPath>
+      <root type="composite" />
+    </classPath>
+    <sourcePath>
+      <root type="composite" />
+    </sourcePath>
+  </roots>
+</jdk>
