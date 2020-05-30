@@ -89,6 +89,7 @@ def run(command, env=None):
     subprocess.check_call(command, shell=True, env=final_env)
 
 
-def run_out(command):
-    print(f"Running '{command}'")
+def run_out(command, silent=False):
+    if not silent:
+        print(f"Running '{command}'")
     return subprocess.check_output(command, shell=True, env=os.environ).decode().strip()

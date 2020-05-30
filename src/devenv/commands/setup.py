@@ -2,8 +2,9 @@ import os
 from inspect import cleandoc
 
 import click
+
 from devenv.lib import run, run_out, JDKTableXML
-from devenv import res
+from devenv import res, completion
 
 install_methods = ["auto", "pip", "poetry", "mono-repo", "requirements"]
 
@@ -152,7 +153,7 @@ class Setup:
 
 
 @click.command()
-@click.argument("version")
+@click.argument("version", autocompletion=completion.get_pyenv_versions)
 @click.argument("directory", nargs=-1)
 @click.option("--install-method", default="auto", type=click.Choice(install_methods))
 @click.option("--no-idea", is_flag=True)

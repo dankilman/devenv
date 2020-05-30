@@ -3,12 +3,13 @@ import os
 
 import click
 
+from devenv import completion
 from devenv.lib import run, run_out, JDKTableXML, extract_venv_version_from_misc_xml
 
 
 @click.command()
 @click.argument("directory", nargs=-1)
-@click.option("--version")
+@click.option("--version", autocompletion=completion.get_pyenv_versions)
 @click.option("--idea-product-prefix", default="PyCharm", envvar="IDEA_PRODUCT_PREFIX")
 def teardown(version, directory, idea_product_prefix):
     directory = directory[0] if directory else None

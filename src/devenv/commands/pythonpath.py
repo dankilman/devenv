@@ -4,7 +4,7 @@ import subprocess
 
 import click
 
-from devenv import res
+from devenv import res, completion
 
 
 class Action:
@@ -82,9 +82,9 @@ def get_site_packages(from_env):
 
 
 @click.command()
-@click.argument("action")
-@click.argument("env", nargs=-1)
-@click.option("--source-env")
+@click.argument("action", type=click.Choice(Action.actions))
+@click.argument("env", nargs=-1, autocompletion=completion.get_pyenv_versions)
+@click.option("--source-env", autocompletion=completion.get_pyenv_versions)
 def pythonpath(action, env, source_env):
     input_env = env[0] if env else None
     if action in Modification.modify_actions and action != "clear" and not input_env:
