@@ -3,11 +3,12 @@ from inspect import cleandoc
 
 import click
 from devenv.lib import run, run_out, JDKTableXML
+from devenv import res
 
 install_methods = ["auto", "pip", "poetry", "mono-repo", "requirements"]
 
 
-class Setup(object):
+class Setup:
     def __init__(self, version, no_idea, idea_product_prefix, directory, install_method):
         self.abs_dir = os.path.abspath(os.path.expanduser(directory or "."))
         self.name = os.path.basename(self.abs_dir)
@@ -39,9 +40,9 @@ class Setup(object):
     def create_env(self):
         versions = [v.strip() for v in run_out("pyenv versions --bare").split("\n")]
         if self.name not in versions:
-            run("pyenv virtualenv {} {}".format(self.version, self.name))
-        run("pyenv local {}".format(self.name))
-        self.prefix = run_out("pyenv prefix {}".format(self.name))
+            run(f"pyenv virtualenv {self.version} {self.name}")
+        run(f"pyenv local {self.name}")
+        self.prefix = run_out(f"pyenv prefix {self.name}")
 
     def install(self):
         install_method = self.install_method
@@ -54,14 +55,14 @@ class Setup(object):
         elif install_method == "requirements":
             self.install_requirements()
         else:
-            raise ValueError("{}?".format(install_method))
+            raise ValueError(f"{install_method}?")
 
     def pip(self, command):
-        run("{}/bin/pip {}".format(self.prefix, command))
+        run(f"{self.prefix}/bin/pip {command}")
 
     def poetry(self, command):
         poetry = os.path.expanduser("~/.poetry/bin/poetry")
-        run("{} {}".format(poetry, command), env={"VIRTUAL_ENV": self.prefix})
+        run(f"{poetry} {command}", env={"VIRTUAL_ENV": self.prefix})
         pass
 
     def install_by_pip(self):
@@ -90,8 +91,7 @@ class Setup(object):
         abs_dir = self.abs_dir
         prefix = self.prefix
 
-        root_plugin_dir = os.path.dirname(os.path.dirname(__file__))
-        idea_template_dir = os.path.join(root_plugin_dir, "res", "dot-idea-template")
+        idea_template_dir = os.path.join(res.DIR, "dot-idea-template")
         idea_template_misc = os.path.join(idea_template_dir, "misc.xml")
         idea_template_iml = os.path.join(idea_template_dir, "name.iml")
         idea_template_venv = os.path.join(idea_template_dir, "venv-conf.xml")
@@ -99,7 +99,7 @@ class Setup(object):
         idea_dir = os.path.join(abs_dir, ".idea")
         idea_project_name = os.path.join(idea_dir, ".name")
         idea_misc = os.path.join(idea_dir, "misc.xml")
-        idea_iml = os.path.join(idea_dir, "{}.iml".format(name))
+        idea_iml = os.path.join(idea_dir, f"{name}.iml")
 
         if not os.path.exists(idea_dir):
             os.mkdir(idea_dir)
@@ -146,8 +146,8 @@ class Setup(object):
             )
             print(venv_conf)
         else:
-            print("Updating {}".format(jdk_table_xml_path))
-            jdk_table_xml.add_entry(raw_entry=venv_conf, entry_name="Python {} ({})".format(version, name))
+            print(f"Updating {jdk_table_xml_path}")
+            jdk_table_xml.add_entry(raw_entry=venv_conf, entry_name=f"Python {version} ({name})")
             jdk_table_xml.save()
 
 

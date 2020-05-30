@@ -30,10 +30,10 @@ def teardown(version, directory, idea_product_prefix):
                 if "/" in venv and venv_name in venv:
                     version = venv.split("/")[0]
                     break
-        run("pyenv virtualenv-delete -f {}".format(venv_name))
+        run(f"pyenv virtualenv-delete -f {venv_name}")
     if version:
         jdk_table_xml = JDKTableXML(idea_product_prefix)
         if jdk_table_xml.path:
-            entry_name = "Python {} ({})".format(version, venv_name)
+            entry_name = f"Python {version} ({venv_name})"
             jdk_table_xml.remove_entry(entry_name)
             jdk_table_xml.save()

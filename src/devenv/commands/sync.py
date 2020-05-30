@@ -8,7 +8,7 @@ from devenv.lib import run
 actions = ["apply", "apply-pythonpath", "apply-setup"]
 
 
-class Config(object):
+class Config:
     def __init__(self, raw_config):
         self.raw_config = raw_config
         self.config = self.preprocess_config(self.raw_config)
@@ -36,15 +36,15 @@ class Config(object):
 
 def sync_setup_single(config, path, env_conf):
     name = env_conf["name"]
-    print("===> Processing {}".format(name))
+    print(f"===> Processing {name}")
     run("dev setup {} {}".format(env_conf["version"], path), env=config.env_vars)
 
 
 def sync_pythonpath_single(source_env, input_envs):
-    print("===> Processing {}".format(source_env))
-    run("dev pythonpath --source-env {} clear".format(source_env))
+    print(f"===> Processing {source_env}")
+    run(f"dev pythonpath --source-env {source_env} clear")
     for name, action in input_envs:
-        run("dev pythonpath --source-env {} {} {}".format(source_env, action, name))
+        run(f"dev pythonpath --source-env {source_env} {action} {name}")
 
 
 def sync_setup(config, directory):

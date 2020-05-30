@@ -4,8 +4,10 @@ import subprocess
 
 import click
 
+from devenv import res
 
-class Action(object):
+
+class Action:
     actions = ["append", "prepend", "remove", "show", "clear"]
 
     def __init__(self, action, source_env, input_env):
@@ -31,7 +33,7 @@ class Action(object):
 
 class Show(Action):
     def __init__(self, **kwargs):
-        super(Show, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         print(json.dumps(self.external_site_packages, indent=2))
 
 
@@ -39,7 +41,7 @@ class Modification(Action):
     modify_actions = ["append", "prepend", "remove", "clear"]
 
     def __init__(self, **kwargs):
-        super(Modification, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.operate_on_external_site_packages()
         self.write_external_site_packages()
         self.verify_sitecustomize_symlink()
@@ -57,22 +59,21 @@ class Modification(Action):
     def write_external_site_packages(self):
         with open(self.external_site_packages_path, "w") as f:
             for w, d in self.external_site_packages:
-                f.write("{}|{}\n".format(w, d))
+                f.write(f"{w}|{d}\n")
 
     def verify_sitecustomize_symlink(self):
-        root_dir = os.path.dirname(os.path.dirname(__file__))
-        internal_customize_path = os.path.join(root_dir, "sitecustomize.py")
+        internal_customize_path = os.path.join(res.DIR, "sitecustomize.py")
         sitecustomize_path = os.path.join(self.source_site_packages, "sitecustomize.py")
         if not os.path.exists(sitecustomize_path):
             os.symlink(internal_customize_path, sitecustomize_path)
 
 
 def get_site_packages(from_env):
-    prefix = subprocess.check_output("pyenv prefix {}".format(from_env), shell=True).decode().strip()
+    prefix = subprocess.check_output(f"pyenv prefix {from_env}", shell=True).decode().strip()
     python_path = os.path.join(prefix, "bin", "python")
     site_packages = (
         subprocess.check_output(
-            '{} -c  "import site, sys; sys.stdout.write(site.getsitepackages()[0])"'.format(python_path), shell=True,
+            f'{python_path} -c  "import site, sys; sys.stdout.write(site.getsitepackages()[0])"', shell=True,
         )
         .decode()
         .strip()

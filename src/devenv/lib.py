@@ -15,7 +15,7 @@ def extract_venv_version_from_misc_xml(misc_path):
     return None
 
 
-class JDKTableXML(object):
+class JDKTableXML:
     def __init__(self, idea_product_prefix):
         self.idea_product_prefix = idea_product_prefix
         self.path = self.locate_jdk_table_xml()
@@ -85,10 +85,10 @@ class JDKTableXML(object):
 def run(command, env=None):
     final_env = os.environ.copy()
     final_env.update(env or {})
-    print("Running '{}'".format(command))
+    print(f"Running '{command}'")
     subprocess.check_call(command, shell=True, env=final_env)
 
 
 def run_out(command):
-    print("Running '{}'".format(command))
+    print(f"Running '{command}'")
     return subprocess.check_output(command, shell=True, env=os.environ).decode().strip()
