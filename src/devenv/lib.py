@@ -1,5 +1,7 @@
 import subprocess
 import os
+
+import yaml
 from xml.dom.minidom import parse, parseString
 
 
@@ -93,3 +95,37 @@ def run_out(command, silent=False):
     if not silent:
         print(f"Running '{command}'")
     return subprocess.check_output(command, shell=True, env=os.environ).decode().strip()
+
+
+class Config:
+    def __init__(self, raw_config):
+        self.raw_config = raw_config
+        self.config = self.preprocess_config(self.raw_config)
+
+    @staticmethod
+    def preprocess_config(config):
+        result = config.copy()
+        result["envs"] = {}
+        for k, v in config["envs"].items():
+            k = os.path.abspath(os.path.expanduser(k))
+            name = os.path.basename(k)
+            v = v.copy()
+            v["name"] = name
+            result["envs"][k] = v
+        return result
+
+    @property
+    def envs(self):
+        return self.config.get("envs", {})
+
+    @property
+    def env_vars(self):
+        return self.config.get("env_vars", {})
+
+
+def load_config(config_path):
+    config_path = os.path.expanduser(config_path)
+    if not os.path.exists(config_path):
+        return {}
+    with open(config_path) as f:
+        return Config(yaml.safe_load(f) or {})

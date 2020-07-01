@@ -3,14 +3,14 @@ from inspect import cleandoc
 
 import click
 
-from devenv.lib import run, run_out, JDKTableXML
+from devenv.lib import run, run_out, JDKTableXML, load_config, Config
 from devenv import res, completion
 
 install_methods = ["auto", "pip", "poetry", "mono-repo", "requirements"]
 
 
 class Setup:
-    def __init__(self, version, no_idea, idea_product_prefix, directory, install_method):
+    def __init__(self, version, no_idea, idea_product_prefix, directory, install_method, config: Config):
         self.abs_dir = os.path.abspath(os.path.expanduser(directory or "."))
         self.name = os.path.basename(self.abs_dir)
         self.prefix = None
@@ -19,6 +19,7 @@ class Setup:
         self.idea_product_prefix = idea_product_prefix
         self.chdir()
         self.install_method = self.process_install_method(install_method)
+        self.config = config
 
     @staticmethod
     def process_install_method(install_method):
@@ -41,8 +42,8 @@ class Setup:
     def create_env(self):
         versions = [v.strip() for v in run_out("pyenv versions --bare").split("\n")]
         if self.name not in versions:
-            run(f"pyenv virtualenv {self.version} {self.name}")
-        run(f"pyenv local {self.name}")
+            self.run(f"pyenv virtualenv {self.version} {self.name}")
+        self.run(f"pyenv local {self.name}")
         self.prefix = run_out(f"pyenv prefix {self.name}")
 
     def install(self):
@@ -59,12 +60,17 @@ class Setup:
             raise ValueError(f"{install_method}?")
 
     def pip(self, command):
-        run(f"{self.prefix}/bin/pip {command}")
+        self.run(f"{self.prefix}/bin/pip {command}")
 
     def poetry(self, command):
         poetry = os.path.expanduser("~/.poetry/bin/poetry")
-        run(f"{poetry} {command}", env={"VIRTUAL_ENV": self.prefix})
+        self.run(f"{poetry} {command}", env={"VIRTUAL_ENV": self.prefix})
         pass
+
+    def run(self, command, env=None):
+        final_env = self.config.env_vars.copy()
+        final_env.update(env or {})
+        run(command, final_env)
 
     def install_by_pip(self):
         self.pip("install -e .")
@@ -74,7 +80,7 @@ class Setup:
 
     def install_for_mono_repo(self):
         # wait for mre to be more mature
-        # run(f"mre install --virtual-env {self.prefix}")
+        # self.run(f"mre install --virtual-env {self.prefix}")
         self.pip("install -r prod-external-requirements.txt -c ../constraints.txt")
         self.pip("install -r prod-internal-requirements.txt -c ../constraints.txt")
         self.pip("install -r test-requirements.txt -c ../constraints.txt")
@@ -168,13 +174,15 @@ class Setup:
 @click.option("--install-method", default="auto", type=click.Choice(install_methods))
 @click.option("--no-idea", is_flag=True)
 @click.option("--idea-product-prefix", default="PyCharm", envvar="IDEA_PRODUCT_PREFIX")
-def setup(version, directory, install_method, no_idea, idea_product_prefix):
+@click.option("--config-path", default="~/.config/devenv.yaml")
+def setup(version, directory, install_method, no_idea, idea_product_prefix, config_path):
     s = Setup(
         directory=directory[0] if directory else None,
         version=version,
         install_method=install_method,
         no_idea=no_idea,
         idea_product_prefix=idea_product_prefix,
+        config=load_config(config_path),
     )
     s.create_env()
     s.install()

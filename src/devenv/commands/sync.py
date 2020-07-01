@@ -1,37 +1,10 @@
 import os
 
 import click
-import yaml
 
-from devenv.lib import run
+from devenv.lib import run, load_config
 
 actions = ["apply", "apply-pythonpath", "apply-setup"]
-
-
-class Config:
-    def __init__(self, raw_config):
-        self.raw_config = raw_config
-        self.config = self.preprocess_config(self.raw_config)
-
-    @staticmethod
-    def preprocess_config(config):
-        result = config.copy()
-        result["envs"] = {}
-        for k, v in config["envs"].items():
-            k = os.path.abspath(os.path.expanduser(k))
-            name = os.path.basename(k)
-            v = v.copy()
-            v["name"] = name
-            result["envs"][k] = v
-        return result
-
-    @property
-    def envs(self):
-        return self.config.get("envs", {})
-
-    @property
-    def env_vars(self):
-        return self.config.get("env_vars", {})
 
 
 def sync_setup_single(config, path, env_conf):
@@ -75,8 +48,7 @@ def sync_pythonpath(config, directory):
 def sync(action, config_path, directory):
     action = action[0] if action else "apply"
     directory = os.path.abspath(os.path.expanduser(directory)) if directory else None
-    with open(os.path.expanduser(config_path)) as f:
-        c = Config(yaml.safe_load(f))
+    c = load_config(config_path)
     if action in ["apply", "apply-setup"]:
         sync_setup(c, directory)
     if action in ["apply", "apply-pythonpath"]:
