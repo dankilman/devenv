@@ -10,16 +10,22 @@ install_methods = ["auto", "pip", "poetry", "mono-repo", "requirements"]
 
 
 class Setup:
-    def __init__(self, version, no_idea, idea_product_prefix, directory, install_method, config: Config):
-        self.abs_dir = os.path.abspath(os.path.expanduser(directory or "."))
+    def __init__(self, version, no_idea, idea_product_prefix, install_method, config: Config):
+        self.abs_dir = os.path.abspath(".")
         self.name = os.path.basename(self.abs_dir)
         self.prefix = None
-        self.version = version
+        self.version = self.process_version(version)
         self.no_idea = no_idea
         self.idea_product_prefix = idea_product_prefix
         self.chdir()
         self.install_method = self.process_install_method(install_method)
         self.config = config
+
+    @staticmethod
+    def process_version(version):
+        if version:
+            return version
+        return run_out('python --version', silent=True).split()[1]
 
     @staticmethod
     def process_install_method(install_method):
@@ -169,16 +175,14 @@ class Setup:
 
 
 @click.command()
-@click.argument("version", autocompletion=completion.get_pyenv_versions)
-@click.argument("directory", nargs=-1)
+@click.argument("version", autocompletion=completion.get_pyenv_versions, nargs=-1)
 @click.option("--install-method", default="auto", type=click.Choice(install_methods))
 @click.option("--no-idea", is_flag=True)
 @click.option("--idea-product-prefix", default="PyCharm", envvar="IDEA_PRODUCT_PREFIX")
 @click.option("--config-path", default="~/.config/devenv.yaml")
-def setup(version, directory, install_method, no_idea, idea_product_prefix, config_path):
+def setup(version, install_method, no_idea, idea_product_prefix, config_path):
     s = Setup(
-        directory=directory[0] if directory else None,
-        version=version,
+        version=version[0] if version else None,
         install_method=install_method,
         no_idea=no_idea,
         idea_product_prefix=idea_product_prefix,
