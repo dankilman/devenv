@@ -45,10 +45,10 @@ def sync_pythonpath(config, directory):
     for path, conf in config.envs.items():
         if directory and directory != path:
             continue
-        name = conf["name"]
-        pythonpath = conf.get("pythonpath")
-        if pythonpath is None:
+        if conf.get("type") == "raw":
             continue
+        name = conf["name"]
+        pythonpath = conf.get("pythonpath") or []
         sync_pythonpath_single(name, pythonpath)
     pass
 
