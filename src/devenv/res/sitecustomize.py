@@ -88,4 +88,5 @@ def _load():
                 addsitedir(site_dir, None, should_prepend)
 
 
-_load()
+if not os.environ.get('DEVENV_IGNORE_EXTERNAL_SITE_PACKAGES'):
+    _load()

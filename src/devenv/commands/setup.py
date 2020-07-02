@@ -88,6 +88,7 @@ class Setup:
 
     def run(self, command, env=None):
         final_env = self.config.env_vars.copy()
+        final_env['DEVENV_IGNORE_EXTERNAL_SITE_PACKAGES'] = '1'
         final_env.update(env or {})
         run(command, final_env)
 
