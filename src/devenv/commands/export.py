@@ -16,11 +16,11 @@ def export(version, bin_name):
     if link_path.exists():
         if link_path.is_symlink():
             if link_path.resolve() == bin_path.resolve():
-                click.echo(f"{bin_name} is already symlinked", color='magenta')
+                click.echo(click.style(f"{bin_name}: Already symlinked", fg='magenta'))
             else:
-                click.echo(f"{bin_name} is already symlinked, but to something else [{bin_path}]", color='yellow')
+                click.echo(click.style(f"{bin_name}: Already symlinked, but to something else [{bin_path}]", fg='yellow'))
         else:
-            click.echo(f"{bin_name} already exists and is not symlinked", color='red')
+            click.echo(click.style(f"{bin_name}: Already exists and is not symlinked", fg='red'))
         return
-    click.echo("Creating symlink", color='green')
+    click.echo(click.style(f"{bin_name}: Creating symlink", fg='green'))
     link_path.symlink_to(bin_path)
