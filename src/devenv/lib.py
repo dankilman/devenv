@@ -122,6 +122,10 @@ class Config:
     def env_vars(self):
         return self.config.get("env_vars", {})
 
+    @property
+    def default_version(self):
+        return self.config.get("default_version")
+
 
 def load_config(config_path):
     config_path = os.path.expanduser(config_path)

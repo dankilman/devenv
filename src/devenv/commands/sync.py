@@ -10,8 +10,13 @@ actions = ["apply", "apply-pythonpath", "apply-setup", "apply-export"]
 def sync_setup_single(config, path, env_conf):
     name = env_conf["name"]
     print(f"===> Processing {name}")
-    version = env_conf.get("version") or config["default_version"]
-    run(f"dev setup {version} {path}", env=config.env_vars)
+    version = env_conf.get("version") or config.default_version
+    tpe = env_conf.get("type")
+    args = ""
+    if tpe == "raw":
+        args = "--no-idea --install-method raw"
+        path = os.path.basename(path)
+    run(f"dev setup {version} -d {path} {args}", env=config.env_vars)
 
 
 def sync_pythonpath_single(source_env, input_envs):

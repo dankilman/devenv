@@ -6,20 +6,29 @@ import click
 from devenv.lib import run, run_out, JDKTableXML, load_config, Config
 from devenv import res, completion
 
-install_methods = ["auto", "pip", "poetry", "mono-repo", "requirements"]
+install_methods = ["auto", "pip", "poetry", "mono-repo", "requirements", "raw"]
 
 
 class Setup:
-    def __init__(self, version, no_idea, idea_product_prefix, install_method, config: Config):
-        self.abs_dir = os.path.abspath(".")
+    def __init__(self, version, no_idea, idea_product_prefix, install_method, config: Config, directory):
+        self.abs_dir = os.path.abspath(directory or ".")
         self.name = os.path.basename(self.abs_dir)
         self.prefix = None
         self.version = self.process_version(version)
         self.no_idea = no_idea
         self.idea_product_prefix = idea_product_prefix
-        self.chdir()
         self.install_method = self.process_install_method(install_method)
         self.config = config
+        if self.install_method == "raw":
+            for env in config.envs.values():
+                if env["name"] == self.name:
+                    self.env_config = env
+                    break
+            else:
+                raise ValueError(f"raw setup requires configuration and none was found for {self.name}")
+        else:
+            self.env_config = None
+        self.chdir()
 
     @staticmethod
     def process_version(version):
@@ -43,13 +52,15 @@ class Setup:
         return install_method
 
     def chdir(self):
-        os.chdir(self.abs_dir)
+        if self.install_method != "raw":
+            os.chdir(self.abs_dir)
 
     def create_env(self):
         versions = [v.strip() for v in run_out("pyenv versions --bare").split("\n")]
         if self.name not in versions:
             self.run(f"pyenv virtualenv {self.version} {self.name}")
-        self.run(f"pyenv local {self.name}")
+        if self.install_method != "raw":
+            self.run(f"pyenv local {self.name}")
         self.prefix = run_out(f"pyenv prefix {self.name}")
 
     def install(self):
@@ -62,6 +73,8 @@ class Setup:
             self.install_for_mono_repo()
         elif install_method == "requirements":
             self.install_requirements()
+        elif install_method == "raw":
+            self.install_raw()
         else:
             raise ValueError(f"{install_method}?")
 
@@ -96,6 +109,13 @@ class Setup:
         if has_constraints:
             command = f"{command} -c constraints.txt"
         self.pip(command)
+
+    def install_raw(self):
+        requirements = self.env_config.get("requirements")
+        if not requirements:
+            print(self.env_config)
+            return
+        self.pip(f"install {' '.join(requirements)}")
 
     def configure_idea(self):
         if self.no_idea:
@@ -172,13 +192,15 @@ class Setup:
 @click.option("--no-idea", is_flag=True)
 @click.option("--idea-product-prefix", default="PyCharm", envvar="IDEA_PRODUCT_PREFIX")
 @click.option("--config-path", default="~/.config/devenv.yaml")
-def setup(version, install_method, no_idea, idea_product_prefix, config_path):
+@click.option("--directory", "-d")
+def setup(version, install_method, no_idea, idea_product_prefix, config_path, directory):
     s = Setup(
         version=version[0] if version else None,
         install_method=install_method,
         no_idea=no_idea,
         idea_product_prefix=idea_product_prefix,
         config=load_config(config_path),
+        directory=directory,
     )
     s.create_env()
     s.install()
