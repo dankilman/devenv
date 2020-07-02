@@ -4,13 +4,14 @@ import click
 
 from devenv.lib import run, load_config
 
-actions = ["apply", "apply-pythonpath", "apply-setup"]
+actions = ["apply", "apply-pythonpath", "apply-setup", "apply-export"]
 
 
 def sync_setup_single(config, path, env_conf):
     name = env_conf["name"]
     print(f"===> Processing {name}")
-    run("dev setup {} {}".format(env_conf["version"], path), env=config.env_vars)
+    version = env_conf.get("version") or config["default_version"]
+    run(f"dev setup {version} {path}", env=config.env_vars)
 
 
 def sync_pythonpath_single(source_env, input_envs):
@@ -18,6 +19,12 @@ def sync_pythonpath_single(source_env, input_envs):
     run(f"dev pythonpath --source-env {source_env} clear")
     for name, action in input_envs:
         run(f"dev pythonpath --source-env {source_env} {action} {name}")
+
+
+def sync_exports_single(env_name, exports):
+    print(f"===> Processing {env_name}")
+    for export in exports:
+        run(f"dev export {env_name} {export}")
 
 
 def sync_setup(config, directory):
@@ -41,6 +48,18 @@ def sync_pythonpath(config, directory):
     pass
 
 
+def sync_exports(config, directory):
+    print("===> Processing `dev export`")
+    for path, conf in config.envs.items():
+        if directory and directory != path:
+            continue
+        export = conf.get("export")
+        if not export:
+            continue
+        name = conf["name"]
+        sync_exports_single(name, export)
+
+
 @click.command()
 @click.argument("action", type=click.Choice(actions), nargs=-1)
 @click.option("--config-path", default="~/.config/devenv.yaml")
@@ -53,3 +72,5 @@ def sync(action, config_path, directory):
         sync_setup(c, directory)
     if action in ["apply", "apply-pythonpath"]:
         sync_pythonpath(c, directory)
+    if action in ["apply", "apply-export"]:
+        sync_exports(c, directory)
