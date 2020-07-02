@@ -35,7 +35,7 @@ class Setup:
     def process_version(version):
         if version:
             return version
-        return run_out('python --version', silent=True).split()[1]
+        return run_out('python --version', silent=True).strip().split(' ')[1]
 
     @staticmethod
     def process_install_method(install_method):

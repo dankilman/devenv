@@ -94,7 +94,7 @@ def run(command, env=None):
 def run_out(command, silent=False):
     if not silent:
         print(f"Running '{command}'")
-    return subprocess.check_output(command, shell=True, env=os.environ).decode().strip()
+    return subprocess.check_output(command, shell=True, env=os.environ, stderr=subprocess.STDOUT).decode().strip()
 
 
 class Config:
