@@ -22,7 +22,7 @@ def sync_setup_single(config, path, env_conf):
 def sync_pythonpath_single(source_env, input_envs):
     print(f"===> Processing {source_env}")
     run(f"dev pythonpath --source-env {source_env} clear")
-    for name, action in input_envs:
+    for action, name in input_envs:
         run(f"dev pythonpath --source-env {source_env} {action} {name}")
 
 
