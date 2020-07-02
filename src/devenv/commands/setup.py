@@ -85,15 +85,7 @@ class Setup:
         self.poetry("install")
 
     def install_for_mono_repo(self):
-        # wait for mre to be more mature
-        # self.run(f"mre install --virtual-env {self.prefix}")
-        self.pip("install -r prod-external-requirements.txt -c ../constraints.txt")
-        self.pip("install -r prod-internal-requirements.txt -c ../constraints.txt")
-        self.pip("install -r test-requirements.txt -c ../constraints.txt")
-        has_hot_requirements = os.path.exists("prod-external-hot-requirements.txt")
-        if has_hot_requirements:
-            self.pip("install -r prod-external-hot-requirements.txt -c ../constraints.txt")
-        self.pip("install -e . --no-deps")
+        self.run(f"mre install --virtual-env {self.prefix}")
 
     def install_requirements(self):
         has_constraints = os.path.exists("constraints.txt")
