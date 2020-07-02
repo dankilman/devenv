@@ -17,6 +17,8 @@ class Setup:
         self.version = self.process_version(version)
         self.no_idea = no_idea
         self.idea_product_prefix = idea_product_prefix
+        if install_method != "raw":
+            self.chdir()
         self.install_method = self.process_install_method(install_method)
         self.config = config
         if self.install_method == "raw":
@@ -28,7 +30,6 @@ class Setup:
                 raise ValueError(f"raw setup requires configuration and none was found for {self.name}")
         else:
             self.env_config = None
-        self.chdir()
 
     @staticmethod
     def process_version(version):
@@ -52,8 +53,7 @@ class Setup:
         return install_method
 
     def chdir(self):
-        if self.install_method != "raw":
-            os.chdir(self.abs_dir)
+        os.chdir(self.abs_dir)
 
     def create_env(self):
         versions = [v.strip() for v in run_out("pyenv versions --bare").split("\n")]
