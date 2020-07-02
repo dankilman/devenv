@@ -15,10 +15,10 @@ def export(version, bin_name):
         raise click.BadParameter(f"{bin_name} do not exists")
     if link_path.exists():
         if link_path.is_symlink():
-            if link_path.resolve() == bin_path:
+            if link_path.resolve() == bin_path.resolve():
                 click.echo(f"{bin_name} is already symlinked", color='magenta')
             else:
-                click.echo(f"{bin_name} is already symlinked, but to something else", color='yellow')
+                click.echo(f"{bin_name} is already symlinked, but to something else [{bin_path}]", color='yellow')
         else:
             click.echo(f"{bin_name} already exists and is not symlinked", color='red')
         return
