@@ -127,6 +127,10 @@ class Config:
     def default_version(self):
         return self.config.get("default_version", "3.8.2")
 
+    @property
+    def default_install_method(self):
+        return self.config.get("default_install_method", "auto")
+
 
 def load_config(config_path):
     config_path = os.path.expanduser(config_path)

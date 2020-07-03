@@ -3,21 +3,22 @@ import os
 import click
 
 from devenv.commands import setup, pythonpath, export
+from devenv.lib import Config
 
 actions = ["-", "pythonpath", "setup", "export"]
 
 
-def sync_setup_single(config, path, env_conf):
+def sync_setup_single(config: Config, path, env_conf):
     name = env_conf["name"]
     click.echo(f"===> Processing {name}")
     version = env_conf.get("version") or config.default_version
-    tpe = env_conf.get("type")
-    if tpe == "raw":
+    install_method = env_conf.get("install_method") or config.default_install_method
+    if install_method == "raw":
         path = os.path.basename(path)
     setup.Setup(
         version=version,
-        no_idea=tpe == "raw",
-        install_method="raw" if tpe == "raw" else "auto",
+        no_idea=install_method == "raw",
+        install_method=install_method,
         config=config,
         directory=path,
     ).start()
@@ -50,7 +51,7 @@ def sync_pythonpath(config, directory):
     for path, conf in config.envs.items():
         if directory and directory != path:
             continue
-        if conf.get("type") == "raw":
+        if conf.get("install_method") == "raw":
             continue
         name = conf["name"]
         ppath = conf.get("pythonpath") or []

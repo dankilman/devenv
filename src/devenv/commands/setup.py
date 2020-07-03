@@ -13,7 +13,7 @@ install_methods = ["auto", "pip", "poetry", "mono-repo", "requirements", "raw"]
 
 class Setup:
     def __init__(self, version, no_idea, install_method, config: Config, directory, idea_product_prefix=IDEA_PREFIX):
-        self.abs_dir = os.path.abspath(directory or ".")
+        self.abs_dir = os.path.abspath(os.path.expanduser(directory or "."))
         self.name = os.path.basename(self.abs_dir)
         self.prefix = None
         self.version = self.process_version(version)
@@ -23,15 +23,14 @@ class Setup:
             self.chdir()
         self.install_method = self.process_install_method(install_method)
         self.config = config
-        if self.install_method == "raw":
-            for env in config.envs.values():
-                if env["name"] == self.name:
-                    self.env_config = env
-                    break
-            else:
-                raise ValueError(f"raw setup requires configuration and none was found for {self.name}")
+        for env in config.envs.values():
+            if env["name"] == self.name:
+                self.env_config = env
+                break
         else:
             self.env_config = None
+        if self.install_method == "raw" and not self.env_config:
+            raise ValueError(f"raw setup requires configuration and none was found for {self.name}")
 
     def start(self):
         self.create_env()
@@ -46,17 +45,18 @@ class Setup:
 
     @staticmethod
     def process_install_method(install_method):
-        if install_method == "auto":
-            if os.path.exists("prod-internal-requirements.txt"):
-                install_method = "mono-repo"
-            elif os.path.exists("poetry.lock"):
-                install_method = "poetry"
-            elif os.path.exists("setup.py"):
-                install_method = "pip"
-            elif os.path.exists("requirements.txt"):
-                install_method = "requirements"
-            else:
-                raise RuntimeError("Can't deduce install method")
+        if install_method != "auto":
+            return install_method
+        if os.path.exists("prod-internal-requirements.txt"):
+            install_method = "mono-repo"
+        elif os.path.exists("poetry.lock"):
+            install_method = "poetry"
+        elif os.path.exists("setup.py"):
+            install_method = "pip"
+        elif os.path.exists("requirements.txt"):
+            install_method = "requirements"
+        else:
+            raise RuntimeError("Can't deduce install method")
         return install_method
 
     def chdir(self):
