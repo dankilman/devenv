@@ -1,10 +1,10 @@
 import json
 import os
-import subprocess
 
 import click
 
 from devenv import res, completion
+from devenv.lib import run_out
 
 
 class Action:
@@ -69,14 +69,11 @@ class Modification(Action):
 
 
 def get_site_packages(from_env):
-    prefix = subprocess.check_output(f"pyenv prefix {from_env}", shell=True).decode().strip()
+    prefix = run_out(f"pyenv prefix {from_env}", silent=True)
     python_path = os.path.join(prefix, "bin", "python")
-    site_packages = (
-        subprocess.check_output(
-            f'{python_path} -c  "import site, sys; sys.stdout.write(site.getsitepackages()[0])"', shell=True,
-        )
-        .decode()
-        .strip()
+    site_packages = run_out(
+        f'{python_path} -c  "import site, sys; sys.stdout.write(site.getsitepackages()[0])"',
+        silent=True,
     )
     return site_packages
 
@@ -86,17 +83,11 @@ def get_site_packages(from_env):
 @click.argument("env", nargs=-1, autocompletion=completion.get_pyenv_versions)
 @click.option("--source-env", autocompletion=completion.get_pyenv_versions)
 def pythonpath(action, env, source_env):
-    if isinstance(env, list):
-        input_env = env[0] if env else None
-    else:
-        input_env = env
+    input_env = env[0] if isinstance(env, list) else env
     if action in Modification.modify_actions and action != "clear" and not input_env:
         raise click.MissingParameter("error: missing env")
-
     if not source_env and not os.environ.get("PYENV_VIRTUAL_ENV"):
         raise click.UsageError("Not in a pyenv virtualenv")
-
     source_env = source_env or os.path.basename(os.environ["PYENV_VIRTUAL_ENV"])
-
     action_cls = Modification if action in Modification.modify_actions else Show
     action_cls(action=action, source_env=source_env, input_env=input_env)
