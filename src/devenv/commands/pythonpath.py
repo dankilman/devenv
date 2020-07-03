@@ -86,7 +86,10 @@ def get_site_packages(from_env):
 @click.argument("env", nargs=-1, autocompletion=completion.get_pyenv_versions)
 @click.option("--source-env", autocompletion=completion.get_pyenv_versions)
 def pythonpath(action, env, source_env):
-    input_env = env[0] if env else None
+    if isinstance(env, list):
+        input_env = env[0] if env else None
+    else:
+        input_env = env
     if action in Modification.modify_actions and action != "clear" and not input_env:
         raise click.MissingParameter("error: missing env")
 

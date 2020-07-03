@@ -10,7 +10,7 @@ install_methods = ["auto", "pip", "poetry", "mono-repo", "requirements", "raw"]
 
 
 class Setup:
-    def __init__(self, version, no_idea, idea_product_prefix, install_method, config: Config, directory):
+    def __init__(self, version, no_idea, install_method, config: Config, directory, idea_product_prefix="PyCharm"):
         self.abs_dir = os.path.abspath(directory or ".")
         self.name = os.path.basename(self.abs_dir)
         self.prefix = None
@@ -30,6 +30,11 @@ class Setup:
                 raise ValueError(f"raw setup requires configuration and none was found for {self.name}")
         else:
             self.env_config = None
+
+    def start(self):
+        self.create_env()
+        self.install()
+        self.configure_idea()
 
     @staticmethod
     def process_version(version):
@@ -56,12 +61,12 @@ class Setup:
         os.chdir(self.abs_dir)
 
     def create_env(self):
-        versions = [v.strip() for v in run_out("pyenv versions --bare").split("\n")]
+        versions = [v.strip() for v in run_out("pyenv versions --bare", silent=True).split("\n")]
         if self.name not in versions:
             self.run(f"pyenv virtualenv {self.version} {self.name}")
         if self.install_method != "raw":
             self.run(f"pyenv local {self.name}")
-        self.prefix = run_out(f"pyenv prefix {self.name}")
+        self.prefix = run_out(f"pyenv prefix {self.name}", silent=True)
 
     def install(self):
         install_method = self.install_method
@@ -195,14 +200,11 @@ class Setup:
 @click.option("--config-path", default="~/.config/devenv.yaml")
 @click.option("--directory", "-d")
 def setup(version, install_method, no_idea, idea_product_prefix, config_path, directory):
-    s = Setup(
+    Setup(
         version=version[0] if version else None,
         install_method=install_method,
         no_idea=no_idea,
         idea_product_prefix=idea_product_prefix,
         config=load_config(config_path),
         directory=directory,
-    )
-    s.create_env()
-    s.install()
-    s.configure_idea()
+    ).start()

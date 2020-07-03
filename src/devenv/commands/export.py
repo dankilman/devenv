@@ -9,7 +9,7 @@ from devenv.lib import run_out
 @click.argument("version", autocompletion=completion.get_pyenv_versions)
 @click.argument("bin_name")
 def export(version, bin_name):
-    bin_path = Path(run_out(f"pyenv prefix {version}")) / "bin" / bin_name
+    bin_path = Path(run_out(f"pyenv prefix {version}", silent=True)) / "bin" / bin_name
     link_path = Path("~/.local/bin").expanduser() / bin_name
     if not bin_path.exists():
         raise click.BadParameter(f"{bin_name} do not exists")
