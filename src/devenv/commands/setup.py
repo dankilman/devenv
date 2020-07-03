@@ -71,19 +71,19 @@ class Setup:
         self.prefix = run_out(f"pyenv prefix {self.name}", silent=True)
 
     def install(self):
-        install_method = self.install_method
-        if install_method == "pip":
-            self.install_by_pip()
-        elif install_method == "poetry":
-            self.install_by_poetry()
-        elif install_method == "mono-repo":
-            self.install_for_mono_repo()
-        elif install_method == "requirements":
-            self.install_requirements()
-        elif install_method == "raw":
+        handlers = {
+            "pip": self.install_by_pip,
+            "poetry": self.install_by_poetry,
+            "mono-repo": self.install_for_mono_repo,
+            "requirements": self.install_requirements,
+            "raw": self.install_raw,
+        }
+        handler = handlers.get(self.install_method)
+        if not handler:
+            raise ValueError(f"{self.install_method}?")
+        handler()
+        if self.install_method != "raw":
             self.install_raw()
-        else:
-            raise ValueError(f"{install_method}?")
 
     def pip(self, command):
         self.run(f"{self.prefix}/bin/pip {command}")
@@ -119,7 +119,10 @@ class Setup:
         self.pip(command)
 
     def install_raw(self):
-        requirements = self.env_config.get("requirements")
+        conf = self.env_config
+        if not conf:
+            return
+        requirements = conf.get("requirements")
         if not requirements:
             return
         self.pip(f"install {' '.join(requirements)}")
