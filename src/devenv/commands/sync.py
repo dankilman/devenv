@@ -39,7 +39,7 @@ def sync_exports_single(env_name, exports):
 
 
 def sync_setup(config, directory):
-    click.echo("===> Processing `dev setup`")
+    click.echo("=>   Processing `dev setup`")
     for path, conf in config.envs.items():
         if directory and directory != path:
             continue
@@ -47,7 +47,7 @@ def sync_setup(config, directory):
 
 
 def sync_pythonpath(config, directory):
-    click.echo("===> Processing `dev pythonpath`")
+    click.echo("=>   Processing `dev pythonpath`")
     for path, conf in config.envs.items():
         if directory and directory != path:
             continue
@@ -60,7 +60,7 @@ def sync_pythonpath(config, directory):
 
 
 def sync_exports(config, directory):
-    click.echo("===> Processing `dev export`")
+    click.echo("=>   Processing `dev export`")
     for path, conf in config.envs.items():
         if directory and directory != path:
             continue
