@@ -18,11 +18,13 @@ def teardown(version, directory, idea_product_prefix):
     python_version_path = os.path.join(directory, ".python-version")
     venv_name = os.path.basename(directory)
     if os.path.exists(idea_path):
+        click.echo("Removing .idea")
         misc_path = os.path.join(idea_path, "misc.xml")
         if not version and os.path.exists(misc_path):
             version = extract_venv_version_from_misc_xml(misc_path)
         shutil.rmtree(idea_path)
     if os.path.exists(python_version_path):
+        click.echo("Removing .python-version")
         os.remove(python_version_path)
     venvs = [v.strip() for v in run_out("pyenv versions --bare").split("\n")]
     if venv_name in venvs:
@@ -37,4 +39,6 @@ def teardown(version, directory, idea_product_prefix):
         if jdk_table_xml.path:
             entry_name = f"Python {version} ({venv_name})"
             jdk_table_xml.remove_entry(entry_name)
-            jdk_table_xml.save()
+            if jdk_table_xml.dirty:
+                click.echo(f"Removing virtualenv from {jdk_table_xml.path}")
+                jdk_table_xml.save()

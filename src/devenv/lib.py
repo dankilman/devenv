@@ -1,6 +1,7 @@
 import subprocess
 import os
 
+import click
 import yaml
 from xml.dom.minidom import parse, parseString
 
@@ -87,13 +88,13 @@ class JDKTableXML:
 def run(command, env=None):
     final_env = os.environ.copy()
     final_env.update(env or {})
-    print(f"Running '{command}'")
+    click.echo(f"Running '{command}'")
     subprocess.check_call(command, shell=True, env=final_env)
 
 
 def run_out(command, silent=False):
     if not silent:
-        print(f"Running '{command}'")
+        click.echo(f"Running '{command}'")
     return subprocess.check_output(command, shell=True, env=os.environ, stderr=subprocess.STDOUT).decode().strip()
 
 

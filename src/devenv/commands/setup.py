@@ -121,7 +121,6 @@ class Setup:
     def install_raw(self):
         requirements = self.env_config.get("requirements")
         if not requirements:
-            print(self.env_config)
             return
         self.pip(f"install {' '.join(requirements)}")
 
@@ -178,7 +177,7 @@ class Setup:
         jdk_table_xml = JDKTableXML(self.idea_product_prefix)
         jdk_table_xml_path = jdk_table_xml.path
         if not jdk_table_xml_path:
-            print(
+            click.echo(
                 cleandoc(
                     """
                 Could not locate jdk.table.xml to configure virtualenv in pycharm
@@ -187,11 +186,12 @@ class Setup:
             """
                 )
             )
-            print(venv_conf)
+            click.echo(venv_conf)
         else:
-            print(f"Updating {jdk_table_xml_path}")
             jdk_table_xml.add_entry(raw_entry=venv_conf, entry_name=f"Python {version} ({name})")
-            jdk_table_xml.save()
+            if jdk_table_xml.dirty:
+                click.echo(f"Updating {jdk_table_xml_path}")
+                jdk_table_xml.save()
 
 
 @click.command()
