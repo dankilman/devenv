@@ -2,10 +2,9 @@ import os
 
 import click
 
-from devenv.lib import load_config
 from devenv.commands import setup, pythonpath, export
 
-actions = ["apply", "apply-pythonpath", "apply-setup", "apply-export"]
+actions = ["-", "pythonpath", "setup", "export"]
 
 
 def sync_setup_single(config, path, env_conf):
@@ -73,15 +72,14 @@ def sync_exports(config, directory):
 
 @click.command()
 @click.argument("action", type=click.Choice(actions), nargs=-1)
-@click.option("--config-path", default="~/.config/devenv.yaml")
 @click.option("--directory", "-d")
-def sync(action, config_path, directory):
-    action = action[0] if action else "apply"
+@click.pass_obj
+def sync(config, action, directory):
+    action = action[0] if action else "-"
     directory = os.path.abspath(os.path.expanduser(directory)) if directory else None
-    c = load_config(config_path)
-    if action in ["apply", "apply-setup"]:
-        sync_setup(c, directory)
-    if action in ["apply", "apply-pythonpath"]:
-        sync_pythonpath(c, directory)
-    if action in ["apply", "apply-export"]:
-        sync_exports(c, directory)
+    if action in ["-", "setup"]:
+        sync_setup(config, directory)
+    if action in ["-", "pythonpath"]:
+        sync_pythonpath(config, directory)
+    if action in ["-", "export"]:
+        sync_exports(config, directory)

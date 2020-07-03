@@ -1,10 +1,14 @@
 import click
 from devenv.commands import pythonpath, setup, sync, teardown, export
+from devenv.lib import load_config
 
 
 @click.group()
-def cli():
-    pass
+@click.option("--config-path", default="~/.config/devenv.yaml", envvar="DEVENV_CONFIG_PATH")
+@click.pass_context
+def cli(ctx, config_path):
+    config = load_config(config_path)
+    ctx.obj = config
 
 
 cli.add_command(pythonpath.pythonpath)

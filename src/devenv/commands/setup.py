@@ -3,14 +3,16 @@ from inspect import cleandoc
 
 import click
 
-from devenv.lib import run, run_out, JDKTableXML, load_config, Config
+from devenv.lib import run, run_out, JDKTableXML, Config
 from devenv import res, completion
+
+IDEA_PREFIX = "PyCharm"
 
 install_methods = ["auto", "pip", "poetry", "mono-repo", "requirements", "raw"]
 
 
 class Setup:
-    def __init__(self, version, no_idea, install_method, config: Config, directory, idea_product_prefix="PyCharm"):
+    def __init__(self, version, no_idea, install_method, config: Config, directory, idea_product_prefix=IDEA_PREFIX):
         self.abs_dir = os.path.abspath(directory or ".")
         self.name = os.path.basename(self.abs_dir)
         self.prefix = None
@@ -196,15 +198,15 @@ class Setup:
 @click.argument("version", autocompletion=completion.get_pyenv_versions, nargs=-1)
 @click.option("--install-method", default="auto", type=click.Choice(install_methods))
 @click.option("--no-idea", is_flag=True)
-@click.option("--idea-product-prefix", default="PyCharm", envvar="IDEA_PRODUCT_PREFIX")
-@click.option("--config-path", default="~/.config/devenv.yaml")
+@click.option("--idea-product-prefix", default=IDEA_PREFIX, envvar="IDEA_PRODUCT_PREFIX")
 @click.option("--directory", "-d")
-def setup(version, install_method, no_idea, idea_product_prefix, config_path, directory):
+@click.pass_obj
+def setup(config, version, install_method, no_idea, idea_product_prefix, directory):
     Setup(
         version=version[0] if version else None,
         install_method=install_method,
         no_idea=no_idea,
         idea_product_prefix=idea_product_prefix,
-        config=load_config(config_path),
+        config=config,
         directory=directory,
     ).start()

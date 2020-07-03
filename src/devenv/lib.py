@@ -106,7 +106,7 @@ class Config:
     def preprocess_config(config):
         result = config.copy()
         result["envs"] = {}
-        for k, v in config["envs"].items():
+        for k, v in config.get("envs", {}).items():
             k = os.path.abspath(os.path.expanduser(k))
             name = os.path.basename(k)
             v = v.copy()
@@ -124,12 +124,14 @@ class Config:
 
     @property
     def default_version(self):
-        return self.config.get("default_version")
+        return self.config.get("default_version", "3.8.2")
 
 
 def load_config(config_path):
     config_path = os.path.expanduser(config_path)
     if not os.path.exists(config_path):
-        return {}
-    with open(config_path) as f:
-        return Config(yaml.safe_load(f) or {})
+        raw_config = {}
+    else:
+        with open(config_path) as f:
+            raw_config = yaml.safe_load(f) or {}
+    return Config(raw_config)
