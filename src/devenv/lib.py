@@ -111,14 +111,17 @@ class Config:
         result["envs"] = {}
         for k, v in config.get("envs", {}).items():
             k = os.path.abspath(os.path.expanduser(k))
-            name = os.path.basename(k)
             v = v.copy()
-            v["name"] = name
-            v.setdefault("install_method", self.default_install_method)
-            v.setdefault("version", self.default_version)
-            v.setdefault("pythonpath", [])
-            v.setdefault("requirements", [])
-            v.setdefault("export", [])
+            defaults = {
+                "name": os.path.basename(k),
+                "install_method": self.default_install_method,
+                "version": self.default_version,
+                "pythonpath": [],
+                "requirements": [],
+                "export": [],
+            }
+            for default_key, default_value in defaults.items():
+                v.setdefault(default_key, default_value)
             result["envs"][k] = v
         return result
 
@@ -151,3 +154,10 @@ def load_config(config_path):
 
 def get_current_env():
     return os.environ.get("PYENV_VIRTUAL_ENV")
+
+
+def get_and_verify_env(env):
+    result = env or get_current_env()
+    if not result:
+        raise click.UsageError("cannot deduce env")
+    return result

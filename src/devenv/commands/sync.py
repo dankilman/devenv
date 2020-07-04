@@ -42,11 +42,13 @@ class Sync:
             fn(path, conf)
 
     def sync_setup_single(self, path, env_conf):
-        click.echo(f"===> Processing {env_conf['name']}")
+        name = env_conf["name"]
+        click.echo(f"===> Processing {name}")
         install_method = env_conf["install_method"]
         if install_method == "raw":
-            path = os.path.basename(path)
+            path = name
         setup.Setup(
+            name=name,
             version=env_conf["version"],
             no_idea=install_method == "raw",
             install_method=install_method,

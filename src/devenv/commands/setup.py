@@ -12,11 +12,10 @@ install_methods = ["auto", "pip", "poetry", "mono-repo", "requirements", "raw"]
 
 
 class Setup:
-    def __init__(self, version, no_idea, install_method, config: Config, directory, idea_product_prefix=IDEA_PREFIX):
+    def __init__(self, name, version, no_idea, install_method, config: Config, directory, idea_product_prefix=IDEA_PREFIX):
         self.abs_dir = os.path.abspath(os.path.expanduser(directory or "."))
-        self.name = os.path.basename(self.abs_dir)
+        self.name = name or os.path.basename(self.abs_dir)
         self.prefix = None
-        self.version = self.process_version(version)
         self.no_idea = no_idea
         self.idea_product_prefix = idea_product_prefix
         if install_method != "raw":
@@ -31,6 +30,7 @@ class Setup:
             self.env_config = None
         if self.install_method == "raw" and not self.env_config:
             raise ValueError(f"raw setup requires configuration and none was found for {self.name}")
+        self.version = self.process_version(version)
 
     def start(self):
         self.create_env()
@@ -40,6 +40,11 @@ class Setup:
     def process_version(self, version):
         if version:
             return version
+        if self.env_config:
+            return self.env_config["version"]
+        if self.env_exists():
+            python_bin = os.path.join(run_out(f"pyenv prefix {self.name}", silent=True), "bin", "python")
+            return run_out(f"{python_bin} --version", silent=True).split(" ")[1]
         return self.config.default_version
 
     @staticmethod
@@ -61,9 +66,13 @@ class Setup:
     def chdir(self):
         os.chdir(self.abs_dir)
 
-    def create_env(self):
+    def env_exists(self):
         versions = [v.strip() for v in run_out("pyenv versions --bare", silent=True).split("\n")]
         if self.name not in versions:
+            self.run(f"pyenv virtualenv {self.version} {self.name}")
+
+    def create_env(self):
+        if not self.env_exists():
             self.run(f"pyenv virtualenv {self.version} {self.name}")
         if self.install_method != "raw":
             self.run(f"pyenv local {self.name}")
@@ -202,9 +211,11 @@ class Setup:
 @click.option("--no-idea", is_flag=True)
 @click.option("--idea-product-prefix", default=IDEA_PREFIX, envvar="DEVENV_IDEA_PREFIX")
 @click.option("--directory", "-d")
+@click.option("--name", "-n")
 @click.pass_obj
-def setup(config, version, install_method, no_idea, idea_product_prefix, directory):
+def setup(config, name, version, install_method, no_idea, idea_product_prefix, directory):
     Setup(
+        name=name,
         version=version[0] if version else None,
         install_method=install_method,
         no_idea=no_idea,
