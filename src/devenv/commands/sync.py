@@ -12,7 +12,7 @@ class Sync:
 
     def __init__(self, config: Config, directory):
         self.config = config
-        self.directory = os.path.abspath(os.path.expanduser(directory)) if directory else None
+        self.directory = os.path.abspath(os.path.expanduser(directory or ".")) if directory != "all" else None
 
     def apply(self, action):
         if action in ["-", "setup"]:
@@ -23,46 +23,28 @@ class Sync:
             self.sync_exports()
 
     def sync_setup(self):
-        config = self.config
-        directory = self.directory
-        click.echo("=>   Processing `dev setup`")
-        for path, conf in config.envs.items():
-            if directory and directory != path:
-                continue
-            self.sync_setup_single(path, conf)
+        self._sync(self.sync_setup_single, "setup")
 
     def sync_pythonpath(self):
-        config = self.config
-        directory = self.directory
-        click.echo("=>   Processing `dev pythonpath`")
-        for path, conf in config.envs.items():
-            if directory and directory != path:
-                continue
-            if conf.get("install_method") == "raw":
-                continue
-            name = conf["name"]
-            ppath = conf.get("pythonpath") or []
-            self.sync_pythonpath_single(name, ppath)
+        self._sync(self.sync_pythonpath_single, "pythonpath")
 
     def sync_exports(self):
+        self._sync(self.sync_exports_single, "export")
+
+    def _sync(self, fn, name):
         config = self.config
         directory = self.directory
-        click.echo("=>   Processing `dev export`")
+        click.echo(f"=>   Processing {name}")
         for path, conf in config.envs.items():
             if directory and directory != path:
                 continue
-            e = conf.get("export")
-            if not e:
-                continue
-            name = conf["name"]
-            self.sync_exports_single(name, e)
+            fn(path, conf)
 
     def sync_setup_single(self, path, env_conf):
         config = self.config
-        name = env_conf["name"]
-        click.echo(f"===> Processing {name}")
-        version = env_conf.get("version") or config.default_version
-        install_method = env_conf.get("install_method") or config.default_install_method
+        click.echo(f"===> Processing {env_conf['name']}")
+        version = env_conf["version"]
+        install_method = env_conf["install_method"]
         if install_method == "raw":
             path = os.path.basename(path)
         setup.Setup(
@@ -74,7 +56,11 @@ class Sync:
         ).start()
 
     @staticmethod
-    def sync_pythonpath_single(source_env, input_envs):
+    def sync_pythonpath_single(_, env_conf):
+        if env_conf["install_method"] == "raw":
+            return
+        source_env = env_conf["name"]
+        input_envs = env_conf["pythonpath"]
         click.echo(f"===> Processing {source_env} {input_envs}")
         fn = pythonpath.pythonpath.callback
         fn("clear", None, source_env)
@@ -82,7 +68,11 @@ class Sync:
             fn(action, name, source_env)
 
     @staticmethod
-    def sync_exports_single(env_name, exports):
+    def sync_exports_single(_, env_conf):
+        exports = env_conf["export"]
+        if not exports:
+            return
+        env_name = env_conf["name"]
         fn = export.export.callback
         for e in exports:
             fn(env_name, e)
@@ -91,7 +81,10 @@ class Sync:
 @click.command()
 @click.argument("action", type=click.Choice(actions), nargs=-1)
 @click.option("--directory", "-d")
+@click.option("--sync-all", "-a", is_flag=True)
 @click.pass_obj
-def sync(config, action, directory):
+def sync(config, action, directory, sync_all):
     action = action[0] if action else "-"
+    assert not (directory and sync_all)
+    directory = directory or (sync_all and "all") or None
     Sync(config, directory).apply(action)

@@ -119,10 +119,10 @@ class Setup:
         self.pip(command)
 
     def install_raw(self):
-        conf = self.env_config
-        if not conf:
+        env_conf = self.env_config
+        if not env_conf:
             return
-        requirements = conf.get("requirements")
+        requirements = env_conf["requirements"]
         if not requirements:
             return
         self.pip(f"install {' '.join(requirements)}")

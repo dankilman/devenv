@@ -100,11 +100,10 @@ def run_out(command, silent=False):
 
 class Config:
     def __init__(self, raw_config):
-        self.raw_config = raw_config
+        self.raw_config = raw_config or {}
         self.config = self.preprocess_config(self.raw_config)
 
-    @staticmethod
-    def preprocess_config(config):
+    def preprocess_config(self, config):
         result = config.copy()
         result["envs"] = {}
         for k, v in config.get("envs", {}).items():
@@ -112,6 +111,11 @@ class Config:
             name = os.path.basename(k)
             v = v.copy()
             v["name"] = name
+            v.setdefault("install_method", self.default_install_method)
+            v.setdefault("version", self.default_version)
+            v.setdefault("pythonpath", [])
+            v.setdefault("requirements", [])
+            v.setdefault("export", [])
             result["envs"][k] = v
         return result
 
@@ -125,11 +129,11 @@ class Config:
 
     @property
     def default_version(self):
-        return self.config.get("default_version", "3.8.2")
+        return self.raw_config.get("default_version", "3.8.2")
 
     @property
     def default_install_method(self):
-        return self.config.get("default_install_method", "auto")
+        return self.raw_config.get("default_install_method", "auto")
 
 
 def load_config(config_path):
