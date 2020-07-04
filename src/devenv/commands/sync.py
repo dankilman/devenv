@@ -41,17 +41,15 @@ class Sync:
             fn(path, conf)
 
     def sync_setup_single(self, path, env_conf):
-        config = self.config
         click.echo(f"===> Processing {env_conf['name']}")
-        version = env_conf["version"]
         install_method = env_conf["install_method"]
         if install_method == "raw":
             path = os.path.basename(path)
         setup.Setup(
-            version=version,
+            version=env_conf["version"],
             no_idea=install_method == "raw",
             install_method=install_method,
-            config=config,
+            config=self.config,
             directory=path,
         ).start()
 
