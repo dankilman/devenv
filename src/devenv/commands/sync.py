@@ -3,6 +3,7 @@ import os
 import click
 
 from devenv.commands import setup, pythonpath, export
+from devenv.commands.export import DEVNEV_EXPORT_DIR
 from devenv.lib import Config
 
 actions = ["-", "pythonpath", "setup", "export"]
@@ -73,7 +74,7 @@ class Sync:
         env_name = env_conf["name"]
         fn = export.export.callback
         for e in exports:
-            fn(env_name, e)
+            fn(env_name, e, DEVNEV_EXPORT_DIR)
 
 
 @click.command()

@@ -6,7 +6,7 @@ import click
 from devenv.lib import run, run_out, JDKTableXML, Config
 from devenv import res, completion
 
-IDEA_PREFIX = "PyCharm"
+IDEA_PREFIX = os.environ.get("DEVENV_IDEA_PREFIX", "PyCharm")
 
 install_methods = ["auto", "pip", "poetry", "mono-repo", "requirements", "raw"]
 
@@ -37,11 +37,10 @@ class Setup:
         self.install()
         self.configure_idea()
 
-    @staticmethod
-    def process_version(version):
+    def process_version(self, version):
         if version:
             return version
-        return run_out('python --version', silent=True).strip().split(' ')[1]
+        return self.config.default_version
 
     @staticmethod
     def process_install_method(install_method):
@@ -201,7 +200,7 @@ class Setup:
 @click.argument("version", autocompletion=completion.get_pyenv_versions, nargs=-1)
 @click.option("--install-method", default="auto", type=click.Choice(install_methods))
 @click.option("--no-idea", is_flag=True)
-@click.option("--idea-product-prefix", default=IDEA_PREFIX, envvar="IDEA_PRODUCT_PREFIX")
+@click.option("--idea-product-prefix", default=IDEA_PREFIX, envvar="DEVENV_IDEA_PREFIX")
 @click.option("--directory", "-d")
 @click.pass_obj
 def setup(config, version, install_method, no_idea, idea_product_prefix, directory):

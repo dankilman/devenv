@@ -1,16 +1,20 @@
+import os
 from pathlib import Path
 
 import click
 from devenv import completion
 from devenv.lib import run_out
 
+DEVNEV_EXPORT_DIR = os.environ.get("DEVENV_EXPORT_DIR", "~/.local/bin")
+
 
 @click.command()
 @click.argument("version", autocompletion=completion.get_pyenv_versions)
 @click.argument("bin_name")
-def export(version, bin_name):
+@click.option("--export-dir", "-e", default=DEVNEV_EXPORT_DIR)
+def export(version, bin_name, export_dir):
     bin_path = Path(run_out(f"pyenv prefix {version}", silent=True)) / "bin" / bin_name
-    link_path = Path("~/.local/bin").expanduser() / bin_name
+    link_path = Path(export_dir).expanduser() / bin_name
     if not bin_path.exists():
         raise click.BadParameter(f"{bin_name} do not exists")
     if link_path.exists():

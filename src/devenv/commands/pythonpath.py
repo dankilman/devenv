@@ -4,7 +4,7 @@ import os
 import click
 
 from devenv import res, completion
-from devenv.lib import run_out
+from devenv.lib import run_out, get_current_env
 
 
 class Action:
@@ -83,11 +83,11 @@ def get_site_packages(from_env):
 @click.argument("env", nargs=-1, autocompletion=completion.get_pyenv_versions)
 @click.option("--source-env", autocompletion=completion.get_pyenv_versions)
 def pythonpath(action, env, source_env):
-    input_env = env[0] if isinstance(env, list) else env
-    if action in Modification.modify_actions and action != "clear" and not input_env:
+    env = env[0] if isinstance(env, list) else env
+    if action in Modification.modify_actions and action != "clear" and not env:
         raise click.MissingParameter("error: missing env")
-    if not source_env and not os.environ.get("PYENV_VIRTUAL_ENV"):
-        raise click.UsageError("Not in a pyenv virtualenv")
-    source_env = source_env or os.path.basename(os.environ["PYENV_VIRTUAL_ENV"])
+    source_env = source_env or get_current_env()
+    if not source_env:
+        raise click.UsageError("cannot deduce env")
     action_cls = Modification if action in Modification.modify_actions else Show
-    action_cls(action=action, source_env=source_env, input_env=input_env)
+    action_cls(action=action, source_env=source_env, input_env=env)

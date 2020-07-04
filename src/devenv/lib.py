@@ -6,6 +6,9 @@ import yaml
 from xml.dom.minidom import parse, parseString
 
 
+DEFAULT_VERSION = os.environ.get("DEVENV_DEFAULT_VERSION", "3.8.2")
+
+
 def extract_venv_version_from_misc_xml(misc_path):
     dom = parse(misc_path)
     components = dom.getElementsByTagName("component")
@@ -129,7 +132,7 @@ class Config:
 
     @property
     def default_version(self):
-        return self.raw_config.get("default_version", "3.8.2")
+        return self.raw_config.get("default_version", DEFAULT_VERSION)
 
     @property
     def default_install_method(self):
@@ -144,3 +147,7 @@ def load_config(config_path):
         with open(config_path) as f:
             raw_config = yaml.safe_load(f) or {}
     return Config(raw_config)
+
+
+def get_current_env():
+    return os.environ.get("PYENV_VIRTUAL_ENV")
