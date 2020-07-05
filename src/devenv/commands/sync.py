@@ -1,9 +1,6 @@
-import os
-
 import click
 
 from devenv.commands import setup, pythonpath, export
-from devenv.commands.export import DEVNEV_EXPORT_DIR
 from devenv.lib import Config, get_env_root
 
 actions = ["-", "pythonpath", "setup", "export"]
@@ -63,10 +60,10 @@ class Sync:
         source_env = env_conf["name"]
         input_envs = env_conf["pythonpath"]
         click.echo(f"===> Processing {source_env} {input_envs}")
-        fn = pythonpath.pythonpath.callback
-        fn("clear", None, source_env)
+        p = pythonpath.PythonPath(source_env)
+        p.clear()
         for action, name in input_envs:
-            fn(action, name, source_env)
+            p.run(action, name)
 
     @staticmethod
     def sync_exports_single(_, env_conf):
@@ -74,9 +71,9 @@ class Sync:
         if not exports:
             return
         env_name = env_conf["name"]
-        fn = export.export.callback
+        exp = export.Export(env_name)
         for e in exports:
-            fn(env_name, e, DEVNEV_EXPORT_DIR)
+            exp.export(e)
 
 
 @click.command()
