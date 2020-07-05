@@ -3,18 +3,20 @@ from pathlib import Path
 
 import click
 from devenv import completion
-from devenv.lib import run_out, get_and_verify_env
+from devenv.lib import get_and_verify_env, Env
 
 DEVNEV_EXPORT_DIR = os.environ.get("DEVENV_EXPORT_DIR", "~/.local/bin")
 
 
 class Export:
-    def __init__(self, source_env, export_dir=DEVNEV_EXPORT_DIR):
+    def __init__(self, config, source_env, export_dir=DEVNEV_EXPORT_DIR):
+        self.config = config
         self.source_env = get_and_verify_env(source_env)
         self.export_dir = Path(export_dir).expanduser()
 
     def export(self, bin_name):
-        bin_path = Path(run_out(f"pyenv prefix {self.source_env}", silent=True)) / "bin" / bin_name
+        env = Env.from_name(self.config, self.source_env)
+        bin_path = env.prefix / "bin" / bin_name
         link_path = self.export_dir / bin_name
         if not bin_path.exists():
             raise click.BadParameter(f"{bin_name} do not exists")
@@ -36,6 +38,7 @@ class Export:
 @click.argument("bin_name")
 @click.option("--source-env", "-s", autocompletion=completion.get_pyenv_versions)
 @click.option("--export-dir", "-e", default=DEVNEV_EXPORT_DIR)
-def export(source_env, bin_name, export_dir):
-    e = Export(source_env=source_env, export_dir=export_dir)
+@click.pass_obj
+def export(config, source_env, bin_name, export_dir):
+    e = Export(config=config, source_env=source_env, export_dir=export_dir)
     e.export(bin_name)

@@ -3,7 +3,7 @@ from inspect import cleandoc
 
 import click
 
-from devenv.lib import run, run_out, JDKTableXML, Config, get_env_root, Env
+from devenv.lib import run, JDKTableXML, Config, get_env_root, Env, pyenv_versions
 from devenv import res, completion
 
 IDEA_PREFIX = os.environ.get("DEVENV_IDEA_PREFIX", "PyCharm")
@@ -39,8 +39,8 @@ class Setup:
         if self.env_config:
             return self.env_config["version"]
         if self.env_exists():
-            python_bin = os.path.join(run_out(f"pyenv prefix {self.name}", silent=True), "bin", "python")
-            return run_out(f"{python_bin} --version", silent=True).split(" ")[1]
+            env = Env.from_name(self.config, self.name)
+            return env.python("--version", out=True).split(" ")[1]
         return self.config.default_version
 
     @staticmethod
@@ -63,16 +63,15 @@ class Setup:
         os.chdir(self.abs_dir)
 
     def env_exists(self):
-        versions = [v.strip() for v in run_out("pyenv versions --bare", silent=True).split("\n")]
-        return self.name in versions
+        return self.name in pyenv_versions()
 
     def create_env(self):
         if not self.env_exists():
             run(f"pyenv virtualenv {self.version} {self.name}")
         if self.install_method != "raw":
             run(f"pyenv local {self.name}")
-        self.prefix = run_out(f"pyenv prefix {self.name}", silent=True)
-        self.env = Env(self.config, self.prefix)
+        self.env = Env.from_name(self.config, self.name)
+        self.prefix = str(self.env.prefix)
 
     def install(self):
         handlers = {

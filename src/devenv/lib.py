@@ -97,10 +97,12 @@ def run(command, env=None):
     subprocess.check_call(command, shell=True, env=final_env)
 
 
-def run_out(command, silent=False):
+def run_out(command, silent=True, env=None):
+    final_env = os.environ.copy()
+    final_env.update(env or {})
     if not silent:
         click.echo(f"Running '{command}'")
-    return subprocess.check_output(command, shell=True, env=os.environ, stderr=subprocess.STDOUT).decode().strip()
+    return subprocess.check_output(command, shell=True, env=env, stderr=subprocess.STDOUT).decode().strip()
 
 
 class Env:
@@ -108,19 +110,30 @@ class Env:
         self.config = config
         self.prefix = Path(prefix)
 
-    def pip(self, command):
-        self.run(f"{self.prefix}/bin/pip {command}")
+    def pip(self, command, out=False):
+        self.run(f"{self.prefix}/bin/pip {command}", out=out)
 
-    def poetry(self, command):
+    def poetry(self, command, out=False):
         poetry = os.path.expanduser("~/.poetry/bin/poetry")
-        self.run(f"{poetry} {command}", env={"VIRTUAL_ENV": str(self.prefix)})
-        pass
+        self.run(f"{poetry} {command}", env={"VIRTUAL_ENV": str(self.prefix)}, out=out)
 
-    def run(self, command, env=None):
+    def python(self, command, out=False):
+        python = os.path.join(self.prefix, "bin", "python")
+        self.run(f"{python} {command}", out=out)
+
+    def run(self, command, env=None, out=False):
         final_env = self.config.env_vars.copy()
         final_env['DEVENV_IGNORE_EXTERNAL_SITE_PACKAGES'] = '1'
         final_env.update(env or {})
-        run(command, final_env)
+        if out:
+            run_out(command, env=final_env)
+        else:
+            run(command, final_env)
+
+    @classmethod
+    def from_name(cls, config, name):
+        prefix = run_out(f"pyenv prefix {name}")
+        return cls(config, prefix)
 
 
 class Config:
@@ -227,3 +240,7 @@ def get_env_root(directory):
             return directory.as_posix()
         directory = directory.parent
     raise RuntimeError("Can't deduce env root")
+
+
+def pyenv_versions():
+    return [v.strip() for v in run_out("pyenv versions --bare").split("\n")]

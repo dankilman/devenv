@@ -5,7 +5,7 @@ import click
 
 from devenv import completion
 from devenv.commands.setup import IDEA_PREFIX
-from devenv.lib import run, run_out, JDKTableXML, extract_venv_version_from_misc_xml, get_env_root
+from devenv.lib import run, JDKTableXML, extract_venv_version_from_misc_xml, get_env_root, pyenv_versions
 
 
 class TearDown:
@@ -39,7 +39,7 @@ class TearDown:
         os.remove(python_version_path)
 
     def delete_venv(self):
-        venvs = [v.strip() for v in run_out("pyenv versions --bare").split("\n")]
+        venvs = pyenv_versions()
         if self.venv_name not in venvs:
             return
         if not self.version:

@@ -64,13 +64,12 @@ class Sync:
         for action, name in input_envs:
             p.modify(action, name)
 
-    @staticmethod
-    def sync_exports_single(_, env_conf):
+    def sync_exports_single(self, _, env_conf):
         exports = env_conf["export"]
         if not exports:
             return
         env_name = env_conf["name"]
-        exp = export.Export(env_name)
+        exp = export.Export(config=self.config, source_env=env_name)
         for e in exports:
             exp.export(e)
 

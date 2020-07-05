@@ -4,7 +4,7 @@ import os
 import click
 
 from devenv import res, completion
-from devenv.lib import run_out, get_and_verify_env, is_env_root
+from devenv.lib import get_and_verify_env, is_env_root, Env
 
 actions = ["append", "prepend", "remove", "show", "clear"]
 modify_actions = ["append", "prepend", "remove", "clear"]
@@ -75,13 +75,11 @@ class PythonPath:
                     current_external.append((what, sitedir))
         return current_external
 
-    @staticmethod
-    def get_site_packages(from_env):
-        prefix = run_out(f"pyenv prefix {from_env}", silent=True)
-        python_path = os.path.join(prefix, "bin", "python")
-        site_packages = run_out(
-            f'{python_path} -c  "import site, sys; sys.stdout.write(site.getsitepackages()[0])"',
-            silent=True,
+    def get_site_packages(self, from_env):
+        env = Env.from_name(self.config, from_env)
+        site_packages = env.python(
+            f'-c "import site, sys; sys.stdout.write(site.getsitepackages()[0])"',
+            out=True,
         )
         return site_packages
 
