@@ -1,5 +1,6 @@
 import subprocess
 import os
+from pathlib import Path
 
 import click
 import yaml
@@ -161,3 +162,23 @@ def get_and_verify_env(env):
     if not result:
         raise click.UsageError("cannot deduce env")
     return result
+
+
+def get_env_root(directory):
+    directory = Path(directory or ".").expanduser().absolute()
+    search_children = [
+        'setup.py',
+        'prod-internal-requirements.txt',
+        'poetry.lock',
+        'pyproject.toml',
+        'requirements.txt',
+        '.git',
+        '.idea',
+        '.python-version',
+    ]
+    while directory.as_posix() != '/':
+        for f in search_children:
+            if (directory / f).exists():
+                return directory.as_posix()
+        directory = directory.parent
+    raise RuntimeError("Can't deduce env root")

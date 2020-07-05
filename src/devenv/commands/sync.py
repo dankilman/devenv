@@ -4,7 +4,7 @@ import click
 
 from devenv.commands import setup, pythonpath, export
 from devenv.commands.export import DEVNEV_EXPORT_DIR
-from devenv.lib import Config
+from devenv.lib import Config, get_env_root
 
 actions = ["-", "pythonpath", "setup", "export"]
 
@@ -13,7 +13,7 @@ class Sync:
 
     def __init__(self, config: Config, directory):
         self.config = config
-        self.directory = os.path.abspath(os.path.expanduser(directory or ".")) if directory != "all" else None
+        self.directory = get_env_root(directory) if directory != "all" else None
 
     def apply(self, action):
         if action in ["-", "setup"]:

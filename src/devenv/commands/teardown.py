@@ -5,7 +5,7 @@ import click
 
 from devenv import completion
 from devenv.commands.setup import IDEA_PREFIX
-from devenv.lib import run, run_out, JDKTableXML, extract_venv_version_from_misc_xml
+from devenv.lib import run, run_out, JDKTableXML, extract_venv_version_from_misc_xml, get_env_root
 
 
 @click.command()
@@ -14,7 +14,7 @@ from devenv.lib import run, run_out, JDKTableXML, extract_venv_version_from_misc
 @click.option("--idea-product-prefix", default=IDEA_PREFIX, envvar="DEVENV_IDEA_PREFIX")
 def teardown(version, directory, idea_product_prefix):
     directory = directory[0] if directory else None
-    directory = os.path.abspath(os.path.expanduser(directory or "."))
+    directory = get_env_root(directory)
     idea_path = os.path.join(directory, ".idea")
     python_version_path = os.path.join(directory, ".python-version")
     venv_name = os.path.basename(directory)

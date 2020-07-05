@@ -3,7 +3,7 @@ from inspect import cleandoc
 
 import click
 
-from devenv.lib import run, run_out, JDKTableXML, Config
+from devenv.lib import run, run_out, JDKTableXML, Config, get_env_root
 from devenv import res, completion
 
 IDEA_PREFIX = os.environ.get("DEVENV_IDEA_PREFIX", "PyCharm")
@@ -13,7 +13,7 @@ install_methods = ["auto", "pip", "poetry", "mono-repo", "requirements", "raw"]
 
 class Setup:
     def __init__(self, name, version, no_idea, install_method, config: Config, directory, idea_product_prefix=IDEA_PREFIX):
-        self.abs_dir = os.path.abspath(os.path.expanduser(directory or "."))
+        self.abs_dir = get_env_root(directory)
         self.name = name or os.path.basename(self.abs_dir)
         self.prefix = None
         self.no_idea = no_idea
@@ -68,8 +68,7 @@ class Setup:
 
     def env_exists(self):
         versions = [v.strip() for v in run_out("pyenv versions --bare", silent=True).split("\n")]
-        if self.name not in versions:
-            self.run(f"pyenv virtualenv {self.version} {self.name}")
+        return self.name in versions
 
     def create_env(self):
         if not self.env_exists():
