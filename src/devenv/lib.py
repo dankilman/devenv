@@ -90,19 +90,14 @@ class JDKTableXML:
                 f.write(self.dom.toprettyxml())
 
 
-def run(command, env=None):
+def run(command, env=None, out=False):
     final_env = os.environ.copy()
     final_env.update(env or {})
-    click.echo(f"Running '{command}'")
-    subprocess.check_call(command, shell=True, env=final_env)
-
-
-def run_out(command, silent=True, env=None):
-    final_env = os.environ.copy()
-    final_env.update(env or {})
-    if not silent:
+    if out:
+        return subprocess.check_output(command, shell=True, env=env, stderr=subprocess.STDOUT).decode().strip()
+    else:
         click.echo(f"Running '{command}'")
-    return subprocess.check_output(command, shell=True, env=env, stderr=subprocess.STDOUT).decode().strip()
+        subprocess.check_call(command, shell=True, env=final_env)
 
 
 class Env:
@@ -125,14 +120,11 @@ class Env:
         final_env = self.config.env_vars.copy()
         final_env['DEVENV_IGNORE_EXTERNAL_SITE_PACKAGES'] = '1'
         final_env.update(env or {})
-        if out:
-            run_out(command, env=final_env)
-        else:
-            run(command, final_env)
+        run(command, final_env, out=out)
 
     @classmethod
     def from_name(cls, config, name):
-        prefix = run_out(f"pyenv prefix {name}")
+        prefix = run(f"pyenv prefix {name}", out=True)
         return cls(config, prefix)
 
 
@@ -243,4 +235,4 @@ def get_env_root(directory):
 
 
 def pyenv_versions():
-    return [v.strip() for v in run_out("pyenv versions --bare").split("\n")]
+    return [v.strip() for v in run("pyenv versions --bare", out=True).split("\n")]
