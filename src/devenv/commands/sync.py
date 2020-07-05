@@ -53,17 +53,16 @@ class Sync:
             directory=path,
         ).start()
 
-    @staticmethod
-    def sync_pythonpath_single(_, env_conf):
+    def sync_pythonpath_single(self, _, env_conf):
         if env_conf["install_method"] == "raw":
             return
         source_env = env_conf["name"]
         input_envs = env_conf["pythonpath"]
         click.echo(f"===> Processing {source_env} {input_envs}")
-        p = pythonpath.PythonPath(source_env)
+        p = pythonpath.PythonPath(config=self.config, source_env=source_env)
         p.clear()
         for action, name in input_envs:
-            p.run(action, name)
+            p.modify(action, name)
 
     @staticmethod
     def sync_exports_single(_, env_conf):

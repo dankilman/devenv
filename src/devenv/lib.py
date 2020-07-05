@@ -126,6 +126,12 @@ class Config:
             result["envs"][k] = v
         return result
 
+    def find_env(self, name):
+        for env in self.envs.values():
+            if env["name"] == name:
+                return env
+        return None
+
     @property
     def envs(self):
         return self.config.get("envs", {})

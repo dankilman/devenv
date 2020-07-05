@@ -11,25 +11,21 @@ modify_actions = ["append", "prepend", "remove", "clear"]
 
 
 class PythonPath:
-    def __init__(self, source_env):
+    def __init__(self, config, source_env):
+        self.config = config
         self.source_env = get_and_verify_env(source_env)
+        self.env_config = config.find_env(self.source_env)
         self.source_site_packages = self.get_site_packages(self.source_env)
         self.external_site_packages_path = os.path.join(self.source_site_packages, "external-site-packages")
         self.external_site_packages = self.get_external_site_packages()
 
-    def run(self, action, input_env=None):
-        if action == "show":
-            self.show()
-        else:
-            self.operate_on_external_site_packages(action, input_env)
-            self.write_external_site_packages()
-            self.verify_sitecustomize_symlink()
-
-    def show(self):
-        print(json.dumps(self.external_site_packages, indent=2))
+    def modify(self, action, input_env=None):
+        self.operate_on_external_site_packages(action, input_env)
+        self.write_external_site_packages()
+        self.verify_sitecustomize_symlink()
 
     def clear(self):
-        self.run("clear")
+        self.modify("clear")
 
     def operate_on_external_site_packages(self, action, input_env):
         input_site_packages = self.get_site_packages(input_env) if input_env else None
@@ -37,9 +33,11 @@ class PythonPath:
             self.external_site_packages = [(w, d) for (w, d) in self.external_site_packages if d != input_site_packages]
         elif action == "clear":
             self.external_site_packages = []
-        else:
+        elif action in ["append", "prepend"]:
             if not any(d == input_site_packages for (_, d) in self.external_site_packages):
                 self.external_site_packages.append((action, input_site_packages))
+        else:
+            raise RuntimeError(f"Unknown action {action}")
 
     def write_external_site_packages(self):
         with open(self.external_site_packages_path, "w") as f:
@@ -79,9 +77,13 @@ class PythonPath:
 @click.argument("action", type=click.Choice(actions))
 @click.argument("env", nargs=-1, autocompletion=completion.get_pyenv_versions)
 @click.option("--source-env", "-s", autocompletion=completion.get_pyenv_versions)
-def pythonpath(action, env, source_env):
+@click.pass_obj
+def pythonpath(config, action, env, source_env):
     env = env[0] if isinstance(env, list) else env
     if action in modify_actions and action != "clear" and not env:
         raise click.MissingParameter("error: missing env")
-    p = PythonPath(source_env=source_env)
-    p.run(action, env)
+    p = PythonPath(config=config, source_env=source_env)
+    if action == "show":
+        print(json.dumps(p.external_site_packages, indent=2))
+    else:
+        p.modify(action, env)

@@ -22,12 +22,7 @@ class Setup:
             self.chdir()
         self.install_method = self.process_install_method(install_method)
         self.config = config
-        for env in config.envs.values():
-            if env["name"] == self.name:
-                self.env_config = env
-                break
-        else:
-            self.env_config = None
+        self.env_config = config.find_env(self.name)
         if self.install_method == "raw" and not self.env_config:
             raise ValueError(f"raw setup requires configuration and none was found for {self.name}")
         self.version = self.process_version(version)
