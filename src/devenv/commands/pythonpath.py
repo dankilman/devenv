@@ -4,7 +4,7 @@ import os
 import click
 
 from devenv import res, completion
-from devenv.lib import run_out, get_and_verify_env
+from devenv.lib import run_out, get_and_verify_env, is_env_root
 
 actions = ["append", "prepend", "remove", "show", "clear"]
 modify_actions = ["append", "prepend", "remove", "clear"]
@@ -18,6 +18,19 @@ class PythonPath:
         self.source_site_packages = self.get_site_packages(self.source_env)
         self.external_site_packages_path = os.path.join(self.source_site_packages, "external-site-packages")
         self.external_site_packages = self.get_external_site_packages()
+
+    def infer(self):
+        normalize = lambda n: n.lower().replace("-", "_")
+        lookup_dirs = self.config.pythonpath_lookup_dirs
+        name_to_path = {}
+        for lookup_dir in lookup_dirs:
+            for entry in lookup_dir.iterdir():
+                if not is_env_root(entry):
+                    continue
+                name = normalize(entry.name)
+                assert name and name not in name_to_path
+                name_to_path[name] = entry
+        print(name_to_path)
 
     def modify(self, action, input_env=None):
         self.operate_on_external_site_packages(action, input_env)

@@ -1,6 +1,7 @@
 import subprocess
 import os
 from pathlib import Path
+from typing import List
 
 import click
 import yaml
@@ -109,6 +110,11 @@ class Config:
 
     def preprocess_config(self, config):
         result = config.copy()
+        result["pythonpath_lookup_dirs"] = [
+            Path(os.path.abspath(os.path.expanduser(p)))
+            for p in config.get("pythonpath_lookup_dirs", [])
+        ]
+        result.setdefault("env_vars", {})
         result["envs"] = {}
         for k, v in config.get("envs", {}).items():
             k = os.path.abspath(os.path.expanduser(k))
@@ -133,19 +139,23 @@ class Config:
         return None
 
     @property
-    def envs(self):
-        return self.config.get("envs", {})
+    def envs(self) -> dict:
+        return self.config["envs"]
 
     @property
-    def env_vars(self):
-        return self.config.get("env_vars", {})
+    def env_vars(self) -> dict:
+        return self.config["env_vars"]
 
     @property
-    def default_version(self):
+    def pythonpath_lookup_dirs(self) -> List[Path]:
+        return self.config["pythonpath_lookup_dirs"]
+
+    @property
+    def default_version(self) -> str:
         return self.raw_config.get("default_version", DEFAULT_VERSION)
 
     @property
-    def default_install_method(self):
+    def default_install_method(self) -> str:
         return self.raw_config.get("default_install_method", "auto")
 
 
@@ -170,8 +180,10 @@ def get_and_verify_env(env):
     return result
 
 
-def get_env_root(directory):
-    directory = Path(directory or ".").expanduser().absolute()
+def is_env_root(path):
+    path = Path(path or ".").expanduser().absolute()
+    if not path.is_dir():
+        return False
     search_children = [
         'setup.py',
         'prod-internal-requirements.txt',
@@ -182,9 +194,16 @@ def get_env_root(directory):
         '.idea',
         '.python-version',
     ]
+    for f in search_children:
+        if (path / f).exists():
+            return True
+    return False
+
+
+def get_env_root(directory):
+    directory = Path(directory or ".").expanduser().absolute()
     while directory.as_posix() != '/':
-        for f in search_children:
-            if (directory / f).exists():
-                return directory.as_posix()
+        if is_env_root(directory):
+            return directory.as_posix()
         directory = directory.parent
     raise RuntimeError("Can't deduce env root")
