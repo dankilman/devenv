@@ -103,6 +103,26 @@ def run_out(command, silent=False):
     return subprocess.check_output(command, shell=True, env=os.environ, stderr=subprocess.STDOUT).decode().strip()
 
 
+class Env:
+    def __init__(self, config, prefix):
+        self.config = config
+        self.prefix = Path(prefix)
+
+    def pip(self, command):
+        self.run(f"{self.prefix}/bin/pip {command}")
+
+    def poetry(self, command):
+        poetry = os.path.expanduser("~/.poetry/bin/poetry")
+        self.run(f"{poetry} {command}", env={"VIRTUAL_ENV": str(self.prefix)})
+        pass
+
+    def run(self, command, env=None):
+        final_env = self.config.env_vars.copy()
+        final_env['DEVENV_IGNORE_EXTERNAL_SITE_PACKAGES'] = '1'
+        final_env.update(env or {})
+        run(command, final_env)
+
+
 class Config:
     def __init__(self, raw_config):
         self.raw_config = raw_config or {}

@@ -3,7 +3,7 @@ from inspect import cleandoc
 
 import click
 
-from devenv.lib import run, run_out, JDKTableXML, Config, get_env_root
+from devenv.lib import run, run_out, JDKTableXML, Config, get_env_root, Env
 from devenv import res, completion
 
 IDEA_PREFIX = os.environ.get("DEVENV_IDEA_PREFIX", "PyCharm")
@@ -16,6 +16,7 @@ class Setup:
         self.abs_dir = get_env_root(directory)
         self.name = name or os.path.basename(self.abs_dir)
         self.prefix = None
+        self.env = None
         self.no_idea = no_idea
         self.idea_product_prefix = idea_product_prefix
         if install_method != "raw":
@@ -67,10 +68,11 @@ class Setup:
 
     def create_env(self):
         if not self.env_exists():
-            self.run(f"pyenv virtualenv {self.version} {self.name}")
+            run(f"pyenv virtualenv {self.version} {self.name}")
         if self.install_method != "raw":
-            self.run(f"pyenv local {self.name}")
+            run(f"pyenv local {self.name}")
         self.prefix = run_out(f"pyenv prefix {self.name}", silent=True)
+        self.env = Env(self.config, self.prefix)
 
     def install(self):
         handlers = {
@@ -87,28 +89,14 @@ class Setup:
         if self.install_method != "raw":
             self.install_raw()
 
-    def pip(self, command):
-        self.run(f"{self.prefix}/bin/pip {command}")
-
-    def poetry(self, command):
-        poetry = os.path.expanduser("~/.poetry/bin/poetry")
-        self.run(f"{poetry} {command}", env={"VIRTUAL_ENV": self.prefix})
-        pass
-
-    def run(self, command, env=None):
-        final_env = self.config.env_vars.copy()
-        final_env['DEVENV_IGNORE_EXTERNAL_SITE_PACKAGES'] = '1'
-        final_env.update(env or {})
-        run(command, final_env)
-
     def install_by_pip(self):
-        self.pip("install -e .")
+        self.env.pip("install -e .")
 
     def install_by_poetry(self):
-        self.poetry("install")
+        self.env.poetry("install")
 
     def install_for_mono_repo(self):
-        self.run(f"mre install --virtual-env {self.prefix}")
+        self.env.run(f"mre install --virtual-env {self.prefix}")
 
     def install_requirements(self):
         has_constraints = os.path.exists("constraints.txt")
@@ -118,7 +106,7 @@ class Setup:
             command = f"{command} -r test-requirements.txt"
         if has_constraints:
             command = f"{command} -c constraints.txt"
-        self.pip(command)
+        self.env.pip(command)
 
     def install_raw(self):
         env_conf = self.env_config
@@ -127,7 +115,7 @@ class Setup:
         requirements = env_conf["requirements"]
         if not requirements:
             return
-        self.pip(f"install {' '.join(requirements)}")
+        self.env.pip(f"install {' '.join(requirements)}")
 
     def configure_idea(self):
         if self.no_idea:
