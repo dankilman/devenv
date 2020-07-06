@@ -61,8 +61,7 @@ class Sync:
         click.echo(f"===> Processing {source_env} {input_envs}")
         p = pythonpath.PythonPath(config=self.config, source_env=source_env)
         p.clear()
-        for action, name in input_envs:
-            p.modify(action, name)
+        p.add(input_envs)
 
     def sync_exports_single(self, _, env_conf):
         exports = env_conf["export"]

@@ -83,9 +83,7 @@ def _load():
                 line = line.strip()
                 if not line:
                     continue
-                should_prepend, site_dir = line.split("|")
-                should_prepend = should_prepend == "prepend"
-                addsitedir(site_dir, None, should_prepend)
+                addsitedir(line, None, prepend=True)
 
 
 if not os.environ.get('DEVENV_IGNORE_EXTERNAL_SITE_PACKAGES'):
