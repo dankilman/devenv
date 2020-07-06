@@ -14,6 +14,7 @@ class PythonPath:
     def __init__(self, config, source_env):
         self.config = config
         self.source_env = get_and_verify_env(source_env)
+        self.name = os.path.basename(self.source_env)
         self.env_config = config.find_env(self.source_env)
         self.source_site_packages = self.get_site_packages(self.source_env)
         self.external_site_packages_path = os.path.join(self.source_site_packages, "external-site-packages")
@@ -37,6 +38,8 @@ class PythonPath:
         ]
         result = []
         for installed_package in installed_packages:
+            if installed_package == self.name:
+                continue
             if installed_package in name_to_path:
                 result.append(name_to_path[installed_package])
         import pprint

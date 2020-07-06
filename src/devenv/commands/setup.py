@@ -40,7 +40,7 @@ class Setup:
             return self.env_config["version"]
         if self.env_exists():
             env = Env.from_name(self.config, self.name)
-            return env.python("--version", out=True).split(" ")[1]
+            return env.python("--version", out=True, err=True).split(" ")[1]
         return self.config.default_version
 
     @staticmethod

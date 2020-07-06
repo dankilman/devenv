@@ -90,11 +90,15 @@ class JDKTableXML:
                 f.write(self.dom.toprettyxml())
 
 
-def run(command, env=None, out=False):
+def run(command, env=None, out=False, err=False):
     final_env = os.environ.copy()
     final_env.update(env or {})
-    if out:
-        return subprocess.check_output(command, shell=True, env=env, stderr=subprocess.STDOUT).decode().strip()
+    if out or err:
+        kwargs = {
+            'stdout': subprocess.STDOUT if out else subprocess.DEVNULL,
+            'stderr': subprocess.STDOUT if err else subprocess.DEVNULL,
+        }
+        return subprocess.check_output(command, shell=True, env=env, **kwargs).decode().strip()
     else:
         click.echo(f"Running '{command}'")
         subprocess.check_call(command, shell=True, env=final_env)
@@ -105,22 +109,22 @@ class Env:
         self.config = config
         self.prefix = Path(prefix)
 
-    def pip(self, command, out=False):
-        return self.run(f"{self.prefix}/bin/pip {command}", out=out)
+    def pip(self, command, out=False, err=False):
+        return self.run(f"{self.prefix}/bin/pip {command}", out=out, err=err)
 
-    def poetry(self, command, out=False):
+    def poetry(self, command, out=False, err=False):
         poetry = os.path.expanduser("~/.poetry/bin/poetry")
-        return self.run(f"{poetry} {command}", env={"VIRTUAL_ENV": str(self.prefix)}, out=out)
+        return self.run(f"{poetry} {command}", env={"VIRTUAL_ENV": str(self.prefix)}, out=out, err=err)
 
-    def python(self, command, out=False):
+    def python(self, command, out=False, err=False):
         python = os.path.join(self.prefix, "bin", "python")
-        return self.run(f"{python} {command}", out=out)
+        return self.run(f"{python} {command}", out=out, err=err)
 
-    def run(self, command, env=None, out=False):
+    def run(self, command, env=None, out=False, err=False):
         final_env = self.config.env_vars.copy()
         final_env['DEVENV_IGNORE_EXTERNAL_SITE_PACKAGES'] = '1'
         final_env.update(env or {})
-        return run(command, final_env, out=out)
+        return run(command, final_env, out=out, err=err)
 
     @classmethod
     def from_name(cls, config, name):
