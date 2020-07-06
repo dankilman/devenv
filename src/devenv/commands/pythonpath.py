@@ -30,7 +30,7 @@ class PythonPath:
                     continue
                 name = normalize(entry.name)
                 assert name and name not in name_to_path
-                name_to_path[name] = entry
+                name_to_path[name] = str(entry.abolute())
         env = Env.from_name(self.config, self.source_env)
         installed_packages = [
             normalize(package["name"]) for package in
@@ -42,8 +42,7 @@ class PythonPath:
                 continue
             if installed_package in name_to_path:
                 result.append(name_to_path[installed_package])
-        import pprint
-        pprint.pprint(result)
+        self.add(result)
 
     def modify(self, action, input_envs=None):
         self.operate_on_external_site_packages(action, input_envs)
