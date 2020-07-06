@@ -35,8 +35,12 @@ class PythonPath:
             normalize(package["name"]) for package in
             json.loads(env.pip("list --no-index --format json", out=True))
         ]
-        print(installed_packages)
-        print(name_to_path)
+        result = []
+        for installed_package in installed_packages:
+            if installed_package in name_to_path:
+                result.append(name_to_path[installed_package])
+        import pprint
+        pprint.pprint(result)
 
     def modify(self, action, input_env=None):
         self.operate_on_external_site_packages(action, input_env)
