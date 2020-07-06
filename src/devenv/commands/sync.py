@@ -61,7 +61,10 @@ class Sync:
         click.echo(f"===> Processing {source_env} {input_envs}")
         p = pythonpath.PythonPath(config=self.config, source_env=source_env)
         p.clear()
-        p.add(input_envs)
+        if input_envs == "infer":
+            p.infer()
+        else:
+            p.add(input_envs)
 
     def sync_exports_single(self, _, env_conf):
         exports = env_conf["export"]
