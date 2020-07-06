@@ -95,7 +95,7 @@ def run(command, env=None, out=False, err=False):
     final_env.update(env or {})
     if out or err:
         kwargs = {
-            'stdout': subprocess.STDOUT if out else subprocess.DEVNULL,
+            # 'stdout': subprocess.STDOUT if out else subprocess.DEVNULL,
             'stderr': subprocess.STDOUT if err else subprocess.DEVNULL,
         }
         return subprocess.check_output(command, shell=True, env=env, **kwargs).decode().strip()
