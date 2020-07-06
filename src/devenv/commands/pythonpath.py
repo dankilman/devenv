@@ -36,13 +36,13 @@ class PythonPath:
             normalize(package["name"]) for package in
             json.loads(env.pip("list --no-index --format json", out=True))
         ]
-        result = []
+        inferred_directories = []
         for installed_package in installed_packages:
             if installed_package == self.name:
                 continue
             if installed_package in name_to_path:
-                result.append(name_to_path[installed_package])
-        self.add(result)
+                inferred_directories.append(name_to_path[installed_package])
+        self.add(inferred_directories)
 
     def modify(self, action, input_envs=None):
         self.operate_on_external_site_packages(action, input_envs)
@@ -74,8 +74,7 @@ class PythonPath:
 
     def write_external_site_packages(self):
         with open(self.external_site_packages_path, "w") as f:
-            for d in self.external_site_packages:
-                f.write(f"{d}\n")
+            f.write("\n".join(self.external_site_packages))
 
     def verify_sitecustomize_symlink(self):
         internal_customize_path = os.path.join(res.DIR, "sitecustomize.py")
