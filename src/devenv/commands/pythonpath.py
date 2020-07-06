@@ -30,7 +30,7 @@ class PythonPath:
                     continue
                 name = normalize(entry.name)
                 assert name and name not in name_to_path
-                name_to_path[name] = str(entry.abolute())
+                name_to_path[name] = str(entry.absolute())
         env = Env.from_name(self.config, self.source_env)
         installed_packages = [
             normalize(package["name"]) for package in
