@@ -6,7 +6,7 @@ import click
 from devenv import res, completion
 from devenv.lib import get_and_verify_env, is_env_root, Env
 
-actions = ["append", "prepend", "remove", "show", "clear"]
+actions = ["append", "prepend", "remove", "show", "clear", "infer"]
 modify_actions = ["append", "prepend", "remove", "clear"]
 
 
@@ -30,6 +30,12 @@ class PythonPath:
                 name = normalize(entry.name)
                 assert name and name not in name_to_path
                 name_to_path[name] = entry
+        env = Env.from_name(self.config, self.source_env)
+        installed_packages = [
+            normalize(package["name"]) for package in
+            json.loads(env.pip("list --no-index --format json", out=True))
+        ]
+        print(installed_packages)
         print(name_to_path)
 
     def modify(self, action, input_env=None):
@@ -96,5 +102,7 @@ def pythonpath(config, action, env, source_env):
     p = PythonPath(config=config, source_env=source_env)
     if action == "show":
         print(json.dumps(p.external_site_packages, indent=2))
+    elif action == "infer":
+        p.infer()
     else:
         p.modify(action, env)

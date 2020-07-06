@@ -19,7 +19,7 @@ def extract_venv_version_from_misc_xml(misc_path):
             entry_name = component.getAttribute("project-jdk-name")
             if not entry_name.startswith("Python "):
                 continue
-            return entry_name[len("Python ") :].split(" ")[0]
+            return entry_name[len("Python "):].split(" ")[0]
     return None
 
 
@@ -106,25 +106,28 @@ class Env:
         self.prefix = Path(prefix)
 
     def pip(self, command, out=False):
-        self.run(f"{self.prefix}/bin/pip {command}", out=out)
+        return self.run(f"{self.prefix}/bin/pip {command}", out=out)
 
     def poetry(self, command, out=False):
         poetry = os.path.expanduser("~/.poetry/bin/poetry")
-        self.run(f"{poetry} {command}", env={"VIRTUAL_ENV": str(self.prefix)}, out=out)
+        return self.run(f"{poetry} {command}", env={"VIRTUAL_ENV": str(self.prefix)}, out=out)
 
     def python(self, command, out=False):
         python = os.path.join(self.prefix, "bin", "python")
-        self.run(f"{python} {command}", out=out)
+        return self.run(f"{python} {command}", out=out)
 
     def run(self, command, env=None, out=False):
         final_env = self.config.env_vars.copy()
         final_env['DEVENV_IGNORE_EXTERNAL_SITE_PACKAGES'] = '1'
         final_env.update(env or {})
-        run(command, final_env, out=out)
+        return run(command, final_env, out=out)
 
     @classmethod
     def from_name(cls, config, name):
-        prefix = run(f"pyenv prefix {name}", out=True)
+        if name.startswith("/"):
+            prefix = name
+        else:
+            prefix = run(f"pyenv prefix {name}", out=True)
         return cls(config, prefix)
 
 
