@@ -95,7 +95,7 @@ class Setup:
         self.env.poetry("install")
 
     def install_for_mono_repo(self):
-        self.env.run(f"mre install --virtual-env {self.prefix}", env={"ACCEPT_SRC": "1"})
+        self.env.run(f"mre install --virtual-env {self.prefix}")
 
     def install_requirements(self):
         has_constraints = os.path.exists("constraints.txt")
