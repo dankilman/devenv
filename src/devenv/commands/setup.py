@@ -17,7 +17,7 @@ class Setup:
         self.name = name or os.path.basename(self.abs_dir)
         self.prefix = None
         self.env = None
-        self.no_idea = no_idea
+        self.no_idea = no_idea or True  # PyCharm integration is currently broken
         self.idea_product_prefix = idea_product_prefix
         if install_method != "raw":
             self.chdir()
