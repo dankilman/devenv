@@ -113,12 +113,10 @@ class Env:
         return self.run(f"{self.prefix}/bin/pip {command}", out=out, err=err)
 
     def poetry(self, command, out=False, err=False):
-        poetry = os.path.expanduser("~/.poetry/bin/poetry")
-        return self.run(f"{poetry} {command}", env={"VIRTUAL_ENV": str(self.prefix)}, out=out, err=err)
+        return self.run(f"poetry {command}", env={"VIRTUAL_ENV": str(self.prefix)}, out=out, err=err)
 
     def python(self, command, out=False, err=False):
-        python = os.path.join(self.prefix, "bin", "python")
-        return self.run(f"{python} {command}", out=out, err=err)
+        return self.run(f"{self.prefix}/bin/python {command}", out=out, err=err)
 
     def run(self, command, env=None, out=False, err=False):
         final_env = self.config.env_vars.copy()
