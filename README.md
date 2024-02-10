@@ -10,4 +10,3 @@ CLI tool for managing several dev python environments that may or may not be con
 ## Installation
 `poetry install` this directory in an environment of your choosing and make the `dev` executable
 accessible somehow.
-
